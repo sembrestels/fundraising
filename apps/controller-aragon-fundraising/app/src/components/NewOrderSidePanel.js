@@ -5,6 +5,10 @@ import transferArrows from '../assets/transferArrows.svg'
 import TabBar from './TabBar/TabBar'
 import Button from './Button/Button'
 
+const formatOrderRequirements = value => {
+  return value.length > 0 && value > 0 ? value : '0.00'
+}
+
 const collateralTokens = ['DAI', 'ANT']
 
 const styles = {
@@ -39,7 +43,8 @@ const styles = {
 
 export default class NewOrderSidePanel extends React.Component {
   static defaultProps = {
-    amount: '',
+    orderAmount: 0,
+    tokenAmount: 0,
     token: '',
     price: '',
     onClose: () => {},
@@ -52,7 +57,8 @@ export default class NewOrderSidePanel extends React.Component {
     this.state = {
       activeTab: 0,
       activeItem: 0,
-      amount: props.amount,
+      orderAmount: props.orderAmount,
+      tokenAmount: props.tokenAmount,
       token: props.token,
       daiRate: '1.00',
     }
@@ -60,8 +66,8 @@ export default class NewOrderSidePanel extends React.Component {
     this.handleTokenChange = this.handleTokenChange.bind(this)
   }
 
-  componentWillReceiveProps({ opened, amount, token, price }) {
-    this.setState({ amount: amount, token: token, price: price })
+  componentWillReceiveProps({ opened, orderAmount, tokenAmount, token, price }) {
+    this.setState({ orderAmount: orderAmount, tokenAmount: tokenAmount, token: token, price: price })
     if (opened && !this.props.opened) {
       // setTimeout is needed as a small hack to wait until the input's on
       // screen until we call focus
@@ -69,8 +75,15 @@ export default class NewOrderSidePanel extends React.Component {
     }
   }
 
-  handleAmountChange = event => {
-    this.setState({ amount: event.target.value })
+  // TODO: create condition for ANT token price / abstract for any token price listed
+  handleOrderAmountChange = event => {
+    const tokenAmount = (event.target.value / this.props.price).toFixed(2)
+    this.setState({ orderAmount: formatOrderRequirements(event.target.value), tokenAmount })
+  }
+
+  handleTokenAmountChange = event => {
+    const orderAmount = (event.target.value * this.props.price).toFixed(2)
+    this.setState({ tokenAmount: formatOrderRequirements(event.target.value), orderAmount })
   }
 
   handleTokenChange(index) {
@@ -78,13 +91,13 @@ export default class NewOrderSidePanel extends React.Component {
     this.setState({ activeItem: index })
   }
 
-  handleSubmit = event => {
+  handleSubmit = (event, orderType) => {
     event.preventDefault()
-    this.props.onSubmit(this.state.amount.trim(), this.state.token.trim())
+    this.props.onSubmit(this.state.tokenAmount, this.state.token.trim(), orderType)
   }
 
   render() {
-    const { amount, token, daiRate, activeItem, activeTab } = this.state
+    const { orderAmount, tokenAmount, activeItem, activeTab } = this.state
     const { opened, onClose, onSubmit, price } = this.props
 
     const renderOrderType = (activeTab, onSubmit) => {
@@ -95,7 +108,7 @@ export default class NewOrderSidePanel extends React.Component {
             <Text weight="bold">TOTAL</Text>
             <div css="float: right;">
               <Text weight="bold" css={orderType ? 'margin-right: 1.5rem;' : 'margin-right: 21px;'}>
-                0
+                {orderType ? tokenAmount : orderAmount}
               </Text>
               <Text weight="bold">{orderType ? 'ATL' : 'USD'}</Text>
             </div>
@@ -104,12 +117,12 @@ export default class NewOrderSidePanel extends React.Component {
             <Text weight="bold" />
             <div css="float: right;">
               <Text color="grey" css={orderType ? 'margin-right: 21px;' : 'margin-right: 1.5rem;'}>
-                0
+                {orderType ? orderAmount : tokenAmount}
               </Text>
               <Text color="grey">{orderType ? 'USD' : 'ATL'}</Text>
             </div>
           </div>
-          <Button mode="strong" type="submit" css="width: 100%;" onClick={onSubmit}>
+          <Button mode="strong" type="submit" css="width: 100%;" onClick={e => this.handleSubmit(e, orderType)}>
             {orderType ? 'Place buy order' : 'Place sell order'}
           </Button>
           <div
@@ -143,7 +156,7 @@ export default class NewOrderSidePanel extends React.Component {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 3rem;
+              margin-bottom: 20px;
             `}
           >
             <div css="width: 50%;">
@@ -168,8 +181,8 @@ export default class NewOrderSidePanel extends React.Component {
                   type="number"
                   style={styles.selectionInputLeft}
                   ref={amount => (this.amountInput = amount)}
-                  value={amount}
-                  onChange={this.handleAmountChange}
+                  value={orderAmount}
+                  onChange={this.handleOrderAmountChange}
                   wide
                   required
                 />
@@ -178,7 +191,6 @@ export default class NewOrderSidePanel extends React.Component {
                 </StyledDropdown>
               </div>
             </div>
-
             <img
               src={transferArrows}
               css={`
@@ -218,15 +230,17 @@ export default class NewOrderSidePanel extends React.Component {
                   adornment={<span style={{ paddingRight: '14px' }}>ATL</span>}
                   adornmentPosition={'end'}
                   ref={amount => (this.amountInput = amount)}
-                  value={amount}
-                  onChange={this.handleAmountChange}
+                  value={tokenAmount}
+                  onChange={this.handleTokenAmountChange}
                   required
                   wide
                 />
               </div>
             </div>
           </div>
-
+          <Text color={'rgb(150, 150, 150)'} size="small" style={styles.daiPrice}>
+            ${price} USD
+          </Text>
           {renderOrderType(activeTab, onSubmit)}
         </Form>
       </SidePanel>
