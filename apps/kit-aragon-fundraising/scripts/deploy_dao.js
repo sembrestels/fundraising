@@ -2,6 +2,8 @@ const namehash = require('eth-ens-namehash').hash
 const FundraisingKit = artifacts.require('FundraisingKit')
 const TokenMock = artifacts.require('TokenMock')
 const Controller = artifacts.require('AragonFundraisingController')
+const MarketMaker = artifacts.require('BancorMarketMaker')
+const Vault = artifacts.require('Vault')
 const apps = ['finance', 'token-manager', 'vault', 'voting']
 const fundraisingApps = [
   'fundraising-market-maker-bancor',
@@ -84,6 +86,9 @@ module.exports = async callback => {
     const collateralBondedToken = await TokenMock.new(defaultOwner, defaultTokenSupply)
     const kit = await FundraisingKit.at(fundraisingAddress)
 
+    console.log("Multisig token: ", collateralMultisig.address)
+    console.log("Bonded token: ", collateralBondedToken.address)
+
     const aragonId = 'fundraising' + Math.random()
     const receipt1 = await kit.newTokens('PRO', 'PROJECT')
     const receipt2 = await kit.newMultisigInstance(
@@ -99,18 +104,18 @@ module.exports = async callback => {
     const { daoAddress: cacheAddress, installedApps: coreApps } = getInstalledApps(receipt2, 'DeployMultisigInstance', apps)
     const { daoAddress, installedApps } = getInstalledApps(receipt3, 'DeployFundraisingInstance', fundraisingApps)
 
-    const controller = await Controller.at(installedApps[fundraisingApps[2]])
-    const receipt4 = await collateralBondedToken.approve(installedApps[fundraisingApps[0]], defaultTokenSupply)
+    // const controller = await Controller.at(installedApps[fundraisingApps[2]])
+
+    const receipt4 = await collateralBondedToken.approve(installedApps[fundraisingApps[0]], defaultTokenSupply) // Allow Market Maker
+    const receipt5 = await collateralBondedToken.approve(installedApps[fundraisingApps[2]], defaultTokenSupply) // Allow Controller transfer permissions
 
     await increaseBlocks(1)
 
     // TODO: These tx revert regardless of the size of the order, maybe we need to send ETH to the controller
-    //
-    // const receipt5 = await controller.createBuyOrder(collateralBondedToken.address, 1)
-    // const batchId = getBuyOrderBatchId(receipt4)
-    //
-    // const receipt6 = await curve.createBuyOrder(owner, ETH, 12, { from: defaultOwner, value: 12 })
-    // console.log(receipt6)
+    // const receipt5 = await controller.createBuyOrder(collateralBondedTokenAddress, 10, { from: defaultOwner, value: 10 })
+    // const receipt6 = await curve.createBuyOrder(defaultOwner, '0x0', 12, { from: controller.address, value: 12 })
+    //const batchId = getBuyOrderBatchId(receipt5)
+    // console.log(batchId)
 
     if (network === 'rpc') {
       console.log('Start the Aragon client locally and go to:', daoAddress)

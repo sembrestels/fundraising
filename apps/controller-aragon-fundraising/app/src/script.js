@@ -16,6 +16,8 @@ import { addressesEqual } from './utils/web3'
 // import vaultBalanceAbi from './abi/vault-balance.json'
 // import vaultGetInitializationBlockAbi from './abi/vault-getinitializationblock.json'
 // import vaultEventAbi from './abi/vault-events.json'
+import tokenManagerAbi from './abi/TokenManager.json'
+import tokenAbi from './abi/TokenMock.json'
 import vaultAbi from './abi/Vault.json'
 import poolAbi from './abi/Pool.json'
 import tapAbi from './abi/Tap.json'
@@ -30,7 +32,6 @@ const tokenSymbols = new Map() // External contract -> symbol
 
 const ETH_CONTRACT = Symbol('ETH_CONTRACT')
 const INITIALIZATION_TRIGGER = Symbol('INITIALIZATION_TRIGGER')
-const PERIOD_DURATION = Symbol('PERIOD_DURATION') // Every 30 Days be sure to refresh the tapRate
 
 const app = new Aragon()
 
@@ -62,12 +63,12 @@ const retryEvery = (callback, initialRetryTimer = 1000, increaseFactor = 5) => {
   attempt()
 }
 
-const externals = zip(app.call('reserve'), app.call('tap'), app.call('marketMaker'))
+const externals = zip(app.call('token-manager'), app.call('vault'), app.call('fundraising-module-pool'), app.call('funraising-module-tap'), app.call('fundraising-market-maker-bancor'))
 // Get the token address to initialize ourselves
 retryEvery(retry => {
   console.log('TRY TO SUBSRIBE')
   externals.subscribe(
-    ([poolAddress, tapAddress, marketMakerAddress]) => initialize(poolAddress, tapAddress, marketMakerAddress),
+    ([tokenManagerAddress, vaultAddress, poolAddress, tapAddress, marketMakerAddress]) => initialize(tokenManagerAddress, vaultAddress, poolAddress, tapAddress, marketMakerAddress),
     err => {
       console.error('Could not start background script execution due to the contract not loading external contract addresses:', err)
       retry()
@@ -75,28 +76,27 @@ retryEvery(retry => {
   )
 })
 
-async function initialize(poolAddress, tapAddress, marketMakerAddress) {
+async function initialize(tokenManagerAddress, vaultAddress, poolAddress, tapAddress, marketMakerAddress) {
   console.log('INITIALIZE')
 
-  console.log(poolAddress)
-  console.log(tapAddress)
-  console.log(marketMakerAddress)
+  console.log('token-manager', tokenManagerAddress)
+  console.log('pool', poolAddress)
+  console.log('tap', tapAddress)
+  console.log('marketMaker', marketMakerAddress)
+  console.log('vault', vaultAddress)
 
+  console.log('Before app Name')
+  appNames.set(tokenManagerAddress, 'token-manager')
+  appNames.set(vaultAddress, 'vault')
+  appNames.set(marketMakerAddress, 'fundraising-market-maker-bancor.aragonpm.eth')
+  appNames.set(tapAddress, 'fundraising-module-tap.aragonpm.eth')
+  appNames.set(poolAddress, 'fundraising-module-pool.aragonpm.eth')
+  const tokenManagerContract = app.external(tokenManagerAddress, tokenManagerAbi)
+  const vaultContract = app.external(vaultAddress, vaultAbi)
   const marketMakerContract = app.external(marketMakerAddress, marketMakerAbi)
   const tapContract = app.external(tapAddress, tapAbi)
   const poolContract = app.external(poolAddress, poolAbi)
-
-  console.log('Before app Name')
-
-  appNames.set(marketMakerAddress, 'bancor-market-maker.aragonpm.eth')
-  appNames.set(tapAddress, 'tap.aragonpm.eth')
-  appNames.set(poolAddress, 'pool.aragonpm.eth')
-  // appNames.set(vaultAddress, 'vault.aragonpm.eth')
-
-  const appAddresses = [tapAddress, marketMakerAddress, poolAddress]
-  appAddresses.map(address => console.log(`Initialize ${appNames.get(address)} at ${address}`))
-
-  console.log('After app Name')
+  appNames.map((address, name) => console.log(`Initialized ${name} at ${address}`))
 
   const network = await app
     .network()
@@ -112,6 +112,10 @@ async function initialize(poolAddress, tapAddress, marketMakerAddress) {
 
   const settings = {
     network,
+    tokenManager: {
+      address: tokenManagerAddress,
+      contract: tokenManagerContract,
+    },
     pool: {
       address: poolAddress,
       contract: poolContract,
@@ -124,33 +128,32 @@ async function initialize(poolAddress, tapAddress, marketMakerAddress) {
       address: marketMakerAddress,
       contract: marketMakerContract,
     },
-    bondedToken: {
-      // address: ethAddress,
-    },
+    vault: {
+      address: vaultAddress,
+      contract: vaultAbi,
+    }
   }
 
-  // let vaultInitializationBlock
+  let vaultInitializationBlock
 
-  // try {
-  //   vaultInitializationBlock = await settings.vault.contract.getInitializationBlock().toPromise()
-  // } catch (err) {
-  //   console.error("Could not get attached vault's initialization block:", err)
-  // }
-
-  console.log('NEW')
+  try {
+    vaultInitializationBlock = await settings.vault.contract.getInitializationBlock().toPromise()
+  } catch (err) {
+    console.error("Could not get attached vault's initialization block:", err)
+  }
 
   return app.store(
     async (state, event) => {
       console.log('EVENT')
       console.log(event)
-
-      if (state === null) state = { batches: {}, balances: {}, tokenSupply: 0, collateralTokens: {}, tapRate: 0, price: 0, historicalOrders: {}, cache: {} }
+      if (state === null) state = { batches: [], balances: [], tokens: [], orders: [], taps: []}
 
       const nextState = {
         ...state,
       }
-      const { tap } = settings
+      const { vault, pool, tap, marketMaker } = settings
       const { returnValues, address: eventAddress, event: eventName } = event
+
 
       // if (eventName === events.SYNC_STATUS_SYNCING) {
       //   console.log('SYNCING')
@@ -160,50 +163,45 @@ async function initialize(poolAddress, tapAddress, marketMakerAddress) {
       //   return { ...nextState, isSyncing: false }
       // }
 
-      // Vault event
-      // if (addressesEqual(eventAddress, vault.address)) {
-      //   return vaultLoadBalance(nextState, event, settings)
-      // }
-
-      switch (eventName) {
-        //   case 'Withdrawal':
-        //     const { amount } = returnValues
-
-        //     if (amount < nextState.maxWithdrawal) {
-        //       await app.call('widthraw', settings.bondedToken.address).toPromise()
-        //       // return updateBalances(await app.call('withdraw') ....)
-        //     } else {
-        //       console.error(`Cannot execute withdrawal, ${amount} exceeds limit of ${nextState.maxWithdrawal}`)
-        //     }
-
-        //     return nextState
-        //   case 'UpdateMonthlyTapRateIncrease':
-        //     return updateMonthlyTapRateIncrease(nextState, event, settings)
-        //   case 'UpdateTokenTap':
-        //     return updateTokenTap(nextState, event, settings)
-        //   case 'refreshMaxWithdrawal':
-        //     return {
-        //       ...nextState,
-        //       maxWithdrawal: await tap.contract.getMaxWithdrawal(settings.bondedToken.address).toPromise(),
-        //     }
-        case 'NewBuyOrder':
-          console.log('THIS IS A BUY ORDER !!!!')
-        // return createBuyOrder(nextState, event, settings)
-        //   case 'CreateSellOrder':
-        //     return createSellOrder(nextState, event, settings)
-        //   case 'ClaimBuyOrder':
-        //     return claimBuy(nextState, event, settings)
-        //   case 'ClaimSellOrder':
-        //     return claimSell(nextState, event, settings)
-        //   case 'ClearBatches':
-        //     return clearBatches(nextState, settings)
-        //   default:
-        //     return nextState
+      if (eventName === INITIALIZATION_TRIGGER) {
+        nextState = await initializeState(nextState, settings)
+      } else if (addressesEqual(eventAddress, vault.address)) {
+        // Vault event
+        return vaultLoadBalance(nextState, event, settings)
+      }
+      else {
+        switch (eventName) {
+          case 'UpdateMonthlyTapRateIncrease':
+            nextState = updateMonthlyTapRateIncrease(nextState, event, settings)
+            break
+          case 'UpdateTokenTap':
+            nextState = updateTokenTap(nextState, event, settings)
+            break
+          case 'NewBuyOrder':
+            console.log('THIS IS A BUY ORDER !!!!')
+            nextState = await createBuyOrder(nextState, event, settings)
+            break
+          case 'NewSellOrder':
+            console.log('THIS IS A SELL ORDER !!!!')
+            nextState = await createSellOrder(nextState, event, settings)
+            break
+         case 'ClearBatches':
+            nextState = clearBatches(nextState, settings)
+            break
+          default:
+            break
+        }
       }
 
-      return state
+      return nextState
     },
-    [tapContract.events(), marketMakerContract.events()]
+    [
+      of({ event: INITIALIZATION_TRIGGER }),
+      vault.contract.events(),
+      pool.contract.events(),
+      tap.contract.events(),
+      marketMaker.contract.events()
+    ]
   )
 }
 
@@ -213,112 +211,186 @@ async function initialize(poolAddress, tapAddress, marketMakerAddress) {
  *                     *
  ***********************/
 
-// const initializeState = settings => async cachedState => {
-//   const newState = {
-//     ...cachedState,
-//     isSyncing: true,
-//     vaultAddress: settings.vault.address,
-//   }
-//   // const withTokenBalances = await loadTokenBalances(newState, settings)
-//   // const withTestnetState = await loadTestnetState(withTokenBalances, settings)
-//   // const withEthBalance = await loadEthBalance(withTestnetState, settings)
+async function initializeState(state, settings) {
+  const bondedTokenAddress = await settings.marketMaker.contract.call('token').toPromise()
+  // We need these addresses to update the price after clearing the users order
+  const newState = {
+    ...state,
+    maxPctIncrease: await settings.tap.contract.call('maxMonthlyTapIncreasePct').toPromise(),
+    periodDuration: marshallDate(2592000000), // Every 30-days refresh the tap / pool controls
+    bondedTokenAddress,
+    marketMakerAddress: settings.marketMaker.address,
+    vaultAddress: settings.vault.address,
+    poolAddress: settings.pool.address,
+    tapAddress: settings.tap.address,
+  }
 
-//   return withEthBalance
-// }
+  console.log('OK', nextState)
 
-async function updateMonthlyTapRateIncrease(state, event, settings) {
-  return marshallMonthlyTapRateIncrease(await app.call('updateMonthlyTapIncreasePct', event.returnValues.percentage).toPromise())
+  // TODO: Create a file with already deployed token addresses after running the deploy_dao script
+  const withTokenSupply = loadTokenSupply(nextState)
+  const withLastWithdrawals = loadLastWidthdrawals(withTokenSupply, settings)
+  const withTaps = loadTaps(withLastWithdrawals, settings)
+  const withMaxWithdrawl = loadMaxWithdrawal(withTaps, settings)
+  return withTaps
 }
 
-async function updateTokenTap(state, event, settings) {
-  return marshallTapRate(await app.call('updateTokenTap', settings.bondedToken.address, event.returnValues.tap).toPromise())
+async function loadMaxWithdrawal(state, settings) {
+  return {
+   ...state,
+   maxWithdrawal: await tap.contract.call('getMaxWithdrawal', state.bondedTokenAddress).toPromise(),
+  }
 }
 
-async function createBuyOrder(state, event, settings) {
+async function loadTaps(state, settings) {
+  const { taps, bondedTokenAddress } = state
+  const updatedBondedTokenTap = {
+    address: bondedTokenAddress,
+    tapAmount: await settings.tap.call('taps', bondedTokenAddress)
+  }
+
+  if (taps === undefined) {
+    return {
+      ...state,
+      taps: [updatedBondedTokenTap]
+    }
+  }
+  else {
+    const tapsIndex = taps.findIndex(({ address }) => address === bondedTokenAddress)
+    if (tapsIndex === -1) {
+      return taps.concat(updatedBondedTokenTap)
+    } else {
+      const newTaps = Array.from(taps)
+      newTaps[tapsIndex] = updatedBondedTokenTap
+      return newTaps
+    }
+  }
+}
+
+async function loadLastWidthdrawals(state, settings) {
+  return {
+    ...state,
+    lastWithdrawal: await tap.call('lastWithdrawals', state.bondedTokenAddress)
+  }
+}
+
+async function loadTokenSupply(state) {
+  const tokenContract = app.external(state.bondedTokenAddress, tokenAbi)
+
+  return {
+    ...state,
+    tokenSupply: await tokenContract.call('totalSupply').toPromise()
+  }
+}
+
+async function vaultLoadBalance(state, { returnValues: { token } }, settings) {
+  return {
+    ...state,
+    balances: await updateBalances(
+      state,
+      token,
+      settings
+    ),
+  }
+}
+
+async function updateMonthlyTapRateIncrease(state, { returnValues: { maxMonthlyTapIncreasePct } }, settings) {
+  return marshallMonthlyTapRateIncrease(await app.call('updateMonthlyTapIncreasePct', maxMonthlyTapIncreasePct).toPromise())
+}
+
+async function updateTokenTap(state, { returnValues: { token, tap } }, settings) {
+  return marshallTapRate(await app.call('updateTokenTap', token, tap).toPromise())
+}
+
+async function createBuyOrder(state, { returnValues: { id, amount, token, collateralToken, state, price } }, settings) {
   console.log('BUY ORDER')
 
   let newState = {
     ...state,
   }
 
-  // Should we pass in the order state each time?
-  // Or should we set it here to 'open' until the next event that allows the user to claim the order from the batch?
   let order = {
-    id: event.returnValues.id,
+    id: id,
+    amount: amount,
     orderType: 'BUY',
-    state: event.returnValues.state,
-    orderPrice: event.returnValues.orderPrice,
+    state: state,
+    price: price,
   }
 
-  newState.historicalOrders[event.returnValues.id] = order
-
-  await app.call('createBuyOrder', settings.bondedToken.address, event.returnValues.amount).subscribe(
+  await app.call('createBuyOrder', token, amount).subscribe(
     ({ buyer, collateralToken, value, batchId }) => {
+      const today = new Date()
       order.address = buyer
       order.collateralToken = collateralToken
       order.amount = value
+      order.date = marshallDate(today)
       newState.batches = [...newState.batches, { batchId, order }]
+      newState.orders[id] = order
     },
-    err => console.error(`Could not place buy order of amount: ${event.returnValues.amount} @ price: ${event.returnValues.orderPrice}`, err)
+    err => console.error(`Could not place buy order of amount: ${amount} @ price: ${price}`, err)
   )
 
-  // TODO: Marshall the date inside historical orders
+  newState = await claimBuy(newState, event, settings)
+
   return newState
 }
 
-async function createSellOrder(state, event, settings) {
+async function createSellOrder(state, { returnValues: { id, amount, token, collateralToken, state, price } }, settings) {
   let newState = {
     ...state,
   }
 
   let order = {
-    id: event.returnValues.id,
+    id: id,
     orderType: 'SELL',
-    state: event.returnValues.state,
-    orderPrice: event.returnValues.orderPrice,
+    state: state,
+    price: price,
   }
 
-  await app.call('createSellOrder', settings.bondedToken.address, event.returnValues.amount).subscribe(
+  await app.call('createSellOrder', token, amount).subscribe(
     ({ seller, collateralToken, amount, batchId }) => {
       order.address = seller
       order.collateralToken = collateralToken
       order.amount = amount
       newState.batches = [...newState.batches, { batchId, order }]
-      newState.historicalOrders[event.returnValues.id] = order
+      newState.orders[id] = order
     },
-    err => console.error(`Could not place sell order of amount: ${event.returnValues.amount} @ price: ${event.returnValues.orderPrice}`, err)
+    err => console.error(`Could not place sell order of amount: ${amount} @ price: ${price}`, err)
   )
+
+  newState = await claimSell(newState, event, settings)
 
   return newState
 }
 
-async function claimBuy(state, event, settings) {
-  const batch = getBatch(state, event.returnValues.batchId)
+async function claimBuy(state, { returnValues: { token, batchId } }, settings) {
+  const batch = getBatch(state, batchId)
   // We don't care about the response
-  batch.subscribe(async batchId => app.call.claimBuy(settings.bondedToken.address, batchId).toPromise())
-  return updateClaimedOrderStatus(state, event.returnValues.orderId)
+  batch.subscribe(async batchId => app.call.claimBuy(token, batchId).toPromise())
+  return updateClaimedOrderStatus(state, batch.order.id)
 }
 
 async function claimSell(state, event, settings) {
   const batch = getBatch(state, event.returnValues.batchId)
   batch.subscribe(async batchId => app.call.claimSell(settings.bondedToken.address, batchId).toPromise())
-  return updateClaimedOrderStatus(state, event.returnValues.orderId)
+  return updateClaimedOrderStatus(state, batch.order.id)
 }
 
 function updateClaimedOrderStatus(state, orderId) {
-  const { historicalOrders } = state
+  const { orders } = state
 
-  let order = historicalOrders[orderId]
+  let order = orders[orderId]
   order.state = 'Claimed'
 
-  const newHistoricalOrders = Array.from(historicalOrders)
-  newHistoricalOrders[orderId] = order
+  const newOrders = Array.from(orders)
+  newOrders[orderId] = order
 
   return {
     ...state,
-    historicalOrders: newHistoricalOrders,
+    orders: newOrders,
   }
 }
+
 function getBatch(state, batchId) {
   const { batches } = state
   const source = from(batches)
@@ -330,7 +402,7 @@ async function clearBatches(state, settings) {
   await app.call('clearBatch').toPromise()
   return {
     ...state,
-    batches: {},
+    batches: [],
   }
 }
 
@@ -350,13 +422,6 @@ async function loadTokenBalances(state, settings) {
     }
   }
   return newState
-}
-
-async function vaultLoadBalance(state, { returnValues: { token } }, settings) {
-  return {
-    ...state,
-    balances: await updateBalances(state, token || settings.ethToken.address, settings),
-  }
 }
 
 async function newPeriod(state, { returnValues: { periodId, periodStarts, periodEnds } }) {
@@ -532,8 +597,8 @@ function marshallTransactionDetails({ amount, date, entity, isIncoming, paymentI
 function marshallTapRate({ token, tap }) {
   const today = new Date()
   return {
-    tapRate: tap,
-    lastIncrease: marshallDate(today),
+    tapRate: { token, },
+    lastTapIncrease: marshallDate(today),
   }
 }
 
@@ -541,7 +606,7 @@ function marshallMonthlyTapRateIncrease({ maxMonthlyTapIncreasePct }) {
   const today = new Date()
   return {
     maxMonthlyTapIncreasePct,
-    lastUpdated: marshallDate(today),
+    lastMaxMonthlyTapIncrease: marshallDate(today),
   }
 }
 
