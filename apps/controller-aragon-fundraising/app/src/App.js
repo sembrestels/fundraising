@@ -1,100 +1,74 @@
-import { useAragonApi } from '@aragon/api-react'
-import PropTypes from 'prop-types'
 import React from 'react'
+import { useApi } from '@aragon/api-react'
+import { AppView, Bar, Button, Main, SyncIndicator, TabBar } from '@aragon/ui'
+import AppHeader from './components/AppHeader/AppHeader'
 import NewOrderSidePanel from './components/NewOrderSidePanel'
 import Reserves from './screens/Reserves'
 import Orders from './screens/Orders'
 import Overview from './screens/Overview'
-import AppView from './components/AppView/AppView'
-import AppHeader from './components/AppHeader/AppHeader'
-import Bar from './components/Bar/Bar'
-import TabBar from './components/TabBar/TabBar'
-import Button from './components/Button/Button'
+
+import { AppLogicProvider, useAppLogic } from './app-logic'
 
 const tabs = ['Overview', 'Orders', 'Reserve Settings']
 
-class App extends React.Component {
-  static propTypes = {
-    api: PropTypes.object,
-    appState: PropTypes.object,
-  }
+const App = () => {
+  const { orderPanel, orderAmount, tokenAmount, token, tabIndex, isSyncing } = useAppLogic()
+  const api = useApi()
 
-  static defaultProps = {
-    isSyncing: true,
-    balances: [],
-    orders: [],
-    collateralTokens: [],
-  }
-
-  state = {
-    orderAmount: 0.0,
-    tokenAmount: 0.0,
-    token: '0x00',
-    tabIndex: 0,
-    displaySidePanel: false,
-  }
-
-  handleNewOrderOpen = () => {
-    this.setState({ displaySidePanel: true })
-  }
-
-  handleNewOrderClose = () => {
-    this.setState({ displaySidePanel: false })
-  }
-
-  handlePlaceOrder = async (collateralTokenAddress, amount, isBuyOrder) => {
+  const handlePlaceOrder = async (collateralTokenAddress, amount, isBuyOrder) => {
     // TODO: add error handling on failed tx, check token balances
     if (isBuyOrder) {
       console.log(`its a buy order where token: ${collateralTokenAddress}, amount: ${amount}`)
-      this.props.api.createBuyOrder(collateralTokenAddress, amount).toPromise()
+      api.createBuyOrder(collateralTokenAddress, amount).toPromise()
     } else {
       console.log(`its a sell order where token: ${collateralTokenAddress}, amount: ${amount}`)
-      this.props.api.createSellOrder(collateralTokenAddress, amount).toPromise()
+      api.createSellOrder(collateralTokenAddress, amount).toPromise()
     }
-
-    this.handleNewOrderClose()
   }
 
-  handleTokenTapUpdate = async tapAmount => {
-    const { token } = this.state
-    this.props.api.updateTokenTap(token, tapAmount).toPromise(err => console.log('You do not have permissions to update this value: ', err))
+  const handleTokenTapUpdate = async tapAmount => {
+    api
+      .updateTokenTap(token, tapAmount)
+      .toPromise()
+      .catch(err => console.error('You do not have permissions to update this value: ', err))
   }
 
-  render() {
-    const { tabIndex, displaySidePanel, orderAmount, tokenAmount, token } = this.state
-    return (
-      <div css="min-width: 320px">
+  return (
+    <div css="min-width: 320px">
+      <Main assetsUrl="./">
+        <SyncIndicator visible={isSyncing} />
         <AppView>
           <AppHeader
             heading="Fundraising"
             action={
-              <Button mode="strong" label="New Order" onClick={this.handleNewOrderOpen}>
+              <Button mode="strong" label="New Order" onClick={() => orderPanel.set(true)}>
                 New Order
               </Button>
             }
           />
           <Bar>
-            <TabBar selected={tabIndex} onChange={tabIndex => this.setState({ tabIndex })} items={tabs} />
+            <TabBar selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
           </Bar>
-          {tabIndex === 0 && <Overview />}
-          {tabIndex === 1 && <Orders />}
-          {tabIndex === 2 && <Reserves updateTokenTap={this.handleTokenTapUpdate} />}
+          {tabIndex.current === 0 && <Overview />}
+          {tabIndex.current === 1 && <Orders />}
+          {tabIndex.current === 2 && <Reserves updateTokenTap={handleTokenTapUpdate} />}
         </AppView>
         <NewOrderSidePanel
-          orderAmount={orderAmount}
-          tokenAmount={tokenAmount}
-          token={token}
+          orderAmount={orderAmount.current}
+          tokenAmount={tokenAmount.current}
+          token={token.current}
           price={300.0}
-          opened={displaySidePanel}
-          onClose={this.handleNewOrderClose}
-          onSubmit={this.handlePlaceOrder}
+          opened={orderPanel.current}
+          onClose={() => orderPanel.set(false)}
+          onSubmit={handlePlaceOrder}
         />
-      </div>
-    )
-  }
+      </Main>
+    </div>
+  )
 }
 
-export default () => {
-  const { api, appState } = useAragonApi()
-  return <App api={api} appState={appState} isSyncing={appState.isSyncing} />
-}
+export default () => (
+  <AppLogicProvider>
+    <App />
+  </AppLogicProvider>
+)
