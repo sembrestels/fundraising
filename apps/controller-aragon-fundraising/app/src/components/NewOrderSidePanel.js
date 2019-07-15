@@ -1,9 +1,9 @@
-import { DropDown, SidePanel, Text, TextInput } from '@aragon/ui'
+import { Button, DropDown, SidePanel, Text, TextInput, TabBar } from '@aragon/ui'
 import React from 'react'
 import styled from 'styled-components'
 import transferArrows from '../assets/transferArrows.svg'
-import TabBar from './TabBar/TabBar'
-import Button from './Button/Button'
+
+const amount = 0
 
 const formatOrderRequirements = value => {
   return value.length > 0 && value > 0 ? value : '0.00'
@@ -92,39 +92,39 @@ export default class NewOrderSidePanel extends React.Component {
     this.setState({ activeItem: index })
   }
 
-  handleSubmit = (event, orderType) => {
+  handleSubmit = (event, isBuyOrder) => {
     event.preventDefault()
-    this.props.onSubmit(this.state.token.trim(), this.state.tokenAmount.trim(), orderType)
+    this.props.onSubmit(this.state.token.trim(), this.state.tokenAmount, isBuyOrder)
   }
 
   render() {
     const { orderAmount, tokenAmount, activeItem, activeTab } = this.state
     const { opened, onClose, onSubmit, price } = this.props
+    const isBuyOrder = activeTab === 0
 
     const renderOrderType = (activeTab, onSubmit) => {
-      const orderType = activeTab === 0
       return (
         <div>
           <div>
             <Text weight="bold">TOTAL</Text>
             <div css="float: right;">
-              <Text weight="bold" css={orderType ? 'margin-right: 1.5rem;' : 'margin-right: 21px;'}>
+              <Text weight="bold" css={isBuyOrder ? 'margin-right: 1.5rem;' : 'margin-right: 21px;'}>
                 0
               </Text>
-              <Text weight="bold">{orderType ? 'ATL' : 'USD'}</Text>
+              <Text weight="bold">{isBuyOrder ? 'ATL' : 'USD'}</Text>
             </div>
           </div>
           <div css="margin-bottom: 2rem;">
             <Text weight="bold" />
             <div css="float: right;">
-              <Text color="grey" css={orderType ? 'margin-right: 21px;' : 'margin-right: 1.5rem;'}>
+              <Text color="grey" css={isBuyOrder ? 'margin-right: 21px;' : 'margin-right: 1.5rem;'}>
                 0
               </Text>
-              <Text color="grey">{orderType ? 'USD' : 'ATL'}</Text>
+              <Text color="grey">{isBuyOrder ? 'USD' : 'ATL'}</Text>
             </div>
           </div>
           <Button mode="strong" type="submit" css="width: 100%;" onClick={onSubmit}>
-            {orderType ? 'Place buy order' : 'Place sell order'}
+            {isBuyOrder ? 'Place buy order' : 'Place sell order'}
           </Button>
           <div
             css={`
@@ -138,7 +138,7 @@ export default class NewOrderSidePanel extends React.Component {
           >
             <p css="font-weight: 700;">Info</p>
             <p>
-              For a {orderType ? 'buying' : 'selling'} order, the more collateral is staked into the bonding curve, you may opt to sell a small share of your
+              For a {isBuyOrder ? 'buying' : 'selling'} order, the more collateral is staked into the bonding curve, you may opt to sell a small share of your
               tokens in order to redeem collateral from the contract and fund the development of the project.
             </p>
           </div>
@@ -151,7 +151,7 @@ export default class NewOrderSidePanel extends React.Component {
         <TabBarWrapper>
           <TabBar items={['Buy', 'Sell']} selected={activeTab} onChange={idx => this.setState({ activeTab: idx })} />
         </TabBarWrapper>
-        <Form onSubmit={this.handleSubmit}>
+        <Form onSubmit={e => this.handleSubmit(e, isBuyOrder)}>
           <div
             css={`
               display: flex;
@@ -183,7 +183,7 @@ export default class NewOrderSidePanel extends React.Component {
                   style={styles.selectionInputLeft}
                   ref={amount => (this.amountInput = amount)}
                   value={amount}
-                  onChange={this.handleAmountChange}
+                  onChange={() => {}}
                   wide
                   required
                 />
@@ -233,7 +233,7 @@ export default class NewOrderSidePanel extends React.Component {
                   adornmentPosition={'end'}
                   ref={amount => (this.amountInput = amount)}
                   value={amount}
-                  onChange={this.handleAmountChange}
+                  onChange={() => {}}
                   required
                   wide
                 />

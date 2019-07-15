@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { font } from '../../utils/styles'
+import { font } from '@aragon/ui'
 
 // TODO: standarize the z-index across all components
 const baseStyles = css`

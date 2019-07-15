@@ -1,8 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { GU } from '../../utils'
-import { useTheme } from '../../theme'
-import { useLayout } from '../Layout/Layout'
+import { GU, useTheme, useLayout } from '@aragon/ui'
 
 function AppHeader({ heading, action }) {
   const theme = useTheme()
