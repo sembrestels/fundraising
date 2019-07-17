@@ -2,13 +2,13 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { blockExplorerUrl, noop, font } from '../../utils'
 import { theme } from '../../theme-legacy'
-import { IconClose } from '../../icons/components'
+import { IconClose } from '../../icons'
 import SafeLink from '../Link/SafeLink'
 import Popover from '../Popover/Popover'
 import Button from '../Button/Button'
 import ButtonIcon from '../Button/ButtonIcon'
 import AddressField from '../AddressField/AddressField'
-import Badge from '../Badge'
+import Badge from '../Badge/Badge.Identity'
 import PopoverActionType from './PopoverActionType'
 
 class IdentityBadgePopover extends React.PureComponent {
@@ -68,7 +68,7 @@ class IdentityBadgePopover extends React.PureComponent {
               {title}
             </h1>
             {connectedAccount && (
-              <Badge.Identity
+              <Badge
                 css={`
                   margin: -1px 0 0 5px;
                   text-transform: uppercase;
@@ -77,7 +77,7 @@ class IdentityBadgePopover extends React.PureComponent {
                 title="This is your Ethereum address"
               >
                 You
-              </Badge.Identity>
+              </Badge>
             )}
           </header>
           <AddressField address={address} />

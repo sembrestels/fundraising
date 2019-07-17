@@ -40,21 +40,9 @@ class IdentityBadge extends React.PureComponent {
   }
   render() {
     const { opened } = this.state
-    const {
-      connectedAccount,
-      popoverAction,
-      popoverTitle,
-      entity,
-      fontSize,
-      customLabel,
-      networkType,
-      shorten,
-      compact,
-      badgeOnly,
-    } = this.props
+    const { connectedAccount, popoverAction, popoverTitle, entity, fontSize, customLabel, networkType, shorten, compact, badgeOnly } = this.props
     const address = isAddress(entity) ? entity : null
-    const label =
-      customLabel || (address && shorten ? shortenAddress(address) : entity)
+    const label = customLabel || (address && shorten ? shortenAddress(address) : entity)
 
     return (
       <React.Fragment>
@@ -78,9 +66,7 @@ class IdentityBadge extends React.PureComponent {
               overflow: hidden;
               display: flex;
               align-items: center;
-              ${compact
-                ? 'padding-left: 8px; border-radius: 2px;'
-                : 'background: #daeaef; border-radius: 3px;'};
+              ${compact ? 'padding-left: 8px; border-radius: 2px;' : 'background: #daeaef; border-radius: 3px;'};
               text-decoration: none;
             `}
             {...stylingProps(this)}
@@ -93,11 +79,7 @@ class IdentityBadge extends React.PureComponent {
                   ${compact && 'position: relative; top: -1px;'};
                 `}
               >
-                <EthIdenticon
-                  scale={compact ? 0.58 : 1}
-                  radius={compact ? 2 : 0}
-                  address={address}
-                />
+                <EthIdenticon scale={compact ? 0.58 : 1} radius={compact ? 2 : 0} address={address} />
               </div>
             )}
             <Text

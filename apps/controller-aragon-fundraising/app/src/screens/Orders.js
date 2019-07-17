@@ -1,12 +1,16 @@
-import { Badge, ContextMenu, ContextMenuItem, DropDown, SafeLink, Table, TableCell, TableHeader, TableRow, Text, theme, unselectable } from '@aragon/ui'
+import { DropDown, SafeLink, Text, theme, unselectable } from '@aragon/ui'
 import BN from 'bignumber.js'
 import { format } from 'date-fns'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
 import ToggleFiltersButton from '../components/ToggleFiltersButton'
-// import IdentityBadge from '../components/IdentityBadge/IdentityBadge'
-import { useViewport } from '../providers'
+import IdentityBadge from '../components/IdentityBadge/IdentityBadge'
+import { DataView } from '../components/DataView/DataView'
+import { useLayout } from '../components/Layout/Layout'
+import { IconCheck, IconCross, IconEllipsis } from '../icons'
+import ContextMenu from '../components/ContextMenu/ContextMenu'
+import ContextMenuItem from '../components/ContextMenu/ContextMenuItem'
 
 const orders = [
   {
@@ -29,7 +33,7 @@ const orders = [
     amount: 0.4,
     price: '4212.21',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cleared',
+    state: 'Confirmed',
   },
   {
     id: 3,
@@ -40,7 +44,7 @@ const orders = [
     amount: 0.4,
     price: '2192.45',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Returned',
+    state: 'Cancelled',
   },
   {
     id: 4,
@@ -51,7 +55,7 @@ const orders = [
     amount: 0.4,
     price: '20.50',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Returned',
+    state: 'Cancelled',
   },
   {
     id: 5,
@@ -62,7 +66,7 @@ const orders = [
     amount: 0.4,
     price: '330.50',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Returned',
+    state: 'Cancelled',
   },
   {
     id: 6,
@@ -73,7 +77,7 @@ const orders = [
     amount: 0.4,
     price: '977.25',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Returned',
+    state: 'Cancelled',
   },
   {
     id: 7,
@@ -84,7 +88,7 @@ const orders = [
     amount: 0.4,
     price: '0.50',
     txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Returned',
+    state: 'Cancelled',
   },
 ].map((order, idx) => {
   order.date = {
@@ -94,6 +98,10 @@ const orders = [
 
   return order
 })
+
+function multiplyArray(base, times) {
+  return [...Array(times)].reduce(v => [...v, ...base], [])
+}
 
 const filter = (orders, state) => {
   const keys = Object.keys(state)
@@ -145,6 +153,16 @@ const filter = (orders, state) => {
     })
 }
 
+function getIconState(state) {
+  if (state === 'Confirmed') {
+    return <IconCheck size="small" color="#2CC68F" />
+  } else if (state === 'Cancelled') {
+    return <IconCross size="small" color="#FB7777" />
+  } else if (state === 'Pending') {
+    return <IconEllipsis size="small" color="#6D777B" />
+  }
+}
+
 export default () => {
   const [state, setState] = useState({
     order: { active: 0, payload: ['All', 'Buy', 'Sell'] },
@@ -155,191 +173,139 @@ export default () => {
     showFilters: false,
   })
 
-  const { within, below } = useViewport()
+  const [page, setPage] = useState(0)
+
+  const { name: layoutName } = useLayout()
 
   return (
     <ContentWrapper>
-      {within(0, 975) && <ToggleFiltersButton onClick={() => setState({ ...state, showFilters: !state.showFilters })} />}
-      <div className={within(0, 975) ? (state.showFilters ? 'filter-nav' : ' filter-nav hide') : 'filter-nav'}>
-        <div className="filter-item">
-          <DateRangeInput
-            startDate={new Date(state.date.payload.start)}
-            endDate={new Date(state.date.payload.end)}
-            onChange={payload => setState({ ...state, date: { payload: { start: payload.start.getTime(), end: payload.end.getTime() } } })}
-          />
-        </div>
+      <DataView
+        currentPage={page}
+        onPageChange={setPage}
+        fields={['Date', 'Address', 'Status', 'Order Amount', 'Token Price', 'Order Type', 'Tokens']}
+        entries={filter(multiplyArray(orders, 10), state)}
+        renderHeader={
+          <div>
+            {layoutName !== 'large' && <ToggleFiltersButton onClick={() => setState({ ...state, showFilters: !state.showFilters })} />}
+            <div className={layoutName !== 'large' ? (state.showFilters ? 'filter-nav' : ' filter-nav hide') : 'filter-nav'}>
+              <div className="filter-item">
+                <DateRangeInput
+                  startDate={new Date(state.date.payload.start)}
+                  endDate={new Date(state.date.payload.end)}
+                  onChange={payload => setState({ ...state, date: { payload: { start: payload.start.getTime(), end: payload.end.getTime() } } })}
+                />
+              </div>
 
-        <div className="filter-item">
-          <span className="filter-label">Holder</span>
-          <DropDown
-            items={state.holder.payload}
-            active={state.holder.active}
-            onChange={idx => setState({ ...state, holder: { ...state.holder, active: idx } })}
-          />
-        </div>
-        <div className="filter-item">
-          <span className="filter-label">Token</span>
-          <DropDown items={state.token.payload} active={state.token.active} onChange={idx => setState({ ...state, token: { ...state.token, active: idx } })} />
-        </div>
-        <div className="filter-item">
-          <span className="filter-label">Order Type</span>
-          <DropDown items={state.order.payload} active={state.order.active} onChange={idx => setState({ ...state, order: { ...state.order, active: idx } })} />
-        </div>
-        <div className="filter-item">
-          <span className="filter-label">Price</span>
-          <DropDown items={state.price.payload} active={state.price.active} onChange={idx => setState({ ...state, price: { ...state.price, active: idx } })} />
-        </div>
-      </div>
-      <Table
-        header={
-          !below('medium') && (
-            <TableRow>
-              <TableHeader title="Date" />
-              <TableHeader title="Order Type" />
-              <TableHeader title="Order State" />
-              <TableHeader title="Address" />
-              <TableHeader title="Amount" />
-              <TableHeader title="Price" />
-            </TableRow>
-          )
+              <div className="filter-item">
+                <span className="filter-label">Holder</span>
+                <DropDown
+                  items={state.holder.payload}
+                  active={state.holder.active}
+                  onChange={idx => setState({ ...state, holder: { ...state.holder, active: idx } })}
+                />
+              </div>
+              <div className="filter-item">
+                <span className="filter-label">Token</span>
+                <DropDown
+                  items={state.token.payload}
+                  active={state.token.active}
+                  onChange={idx => setState({ ...state, token: { ...state.token, active: idx } })}
+                />
+              </div>
+              <div className="filter-item">
+                <span className="filter-label">Order Type</span>
+                <DropDown
+                  items={state.order.payload}
+                  active={state.order.active}
+                  onChange={idx => setState({ ...state, order: { ...state.order, active: idx } })}
+                />
+              </div>
+              <div className="filter-item">
+                <span className="filter-label">Price</span>
+                <DropDown
+                  items={state.price.payload}
+                  active={state.price.active}
+                  onChange={idx => setState({ ...state, price: { ...state.price, active: idx } })}
+                />
+              </div>
+            </div>
+          </div>
         }
-      >
-        {!below('medium') &&
-          filter(orders, state).map(order => {
-            return (
-              <TableRow key={order.id}>
-                <TableCell>
-                  <StyledText>{order.date.text}</StyledText>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    background={order.type === 'buy' ? theme.badgeAppBackground : theme.infoPermissionsBackground}
-                    foreground={order.type === 'buy' ? theme.Purple : 'rgb(218, 192, 139)'}
-                  >
-                    {order.type === 'buy' ? 'Buy order' : 'Sell order'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    background={order.state === 'Pending' ? '#e5f1ff' : order.state === 'Cleared' ? theme.badgeAppBackground : theme.infoPermissionsBackground}
-                    foreground={order.state === 'Pending' ? '#84acf5' : order.state === 'Cleared' ? theme.Purple : 'rgb(218, 192, 139)'}
-                  >
-                    {order.state}
-                  </Badge>
-                </TableCell>
-                <TableCell>{/* <StyledIdentityBadge entity={order.from} shorten={below('large')} /> */}</TableCell>
-                <TableCell>
-                  <StyledText>
-                    {order.type === 'buy' ? '+' : '-'}
-                    {order.amount + '  '}
-                    {order.collateral}
-                  </StyledText>
-                </TableCell>
-                <TableCell>
-                  <StyledText>{'$' + order.price}</StyledText>
-                  <ContextMenu>
-                    <SafeLink href={'https://etherscan.io/tx/' + order.txHash} target="_blank">
-                      <ContextMenuItem>View Tx on Etherscan</ContextMenuItem>
-                    </SafeLink>
-                  </ContextMenu>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        {below('medium') &&
-          filter(orders, state).map(order => {
-            return (
-              <TableRow key={order.id}>
-                <StyledCell>
-                  <div
-                    css={`
-                      width: 100%;
-                      margin-bottom: 1rem;
-                    `}
-                  >
-                    <StyledText>{order.date.text}</StyledText>
-                    <Badge
-                      css={`
-                        float: right;
-                        margin-left: 1rem;
-                      `}
-                      background={
-                        order.state === 'Pending' ? '#e5f1ff' : order.state === 'Cleared' ? theme.badgeAppBackground : theme.infoPermissionsBackground
-                      }
-                      foreground={order.state === 'Pending' ? '#84acf5' : order.state === 'Cleared' ? theme.Purple : 'rgb(218, 192, 139)'}
-                    >
-                      {order.state}
-                    </Badge>
-                    <Badge
-                      css={`
-                        float: right;
-                      `}
-                      background={order.type === 'buy' ? theme.badgeAppBackground : theme.infoPermissionsBackground}
-                      foreground={order.type === 'buy' ? theme.Purple : 'rgb(218, 192, 139)'}
-                    >
-                      {order.type === 'buy' ? 'Buy order' : 'Sell order'}
-                    </Badge>
-                  </div>
-                  <div
-                    css={`
-                      margin-bottom: 1rem;
-                    `}
-                  >
-                    {/* <StyledIdentityBadge entity={order.from} shorten={below('small')} /> */}
-                  </div>
-                  <div
-                    css={`
-                      width: 100%;
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                    `}
-                  >
-                    <div>
-                      <StyledText
-                        css={`
-                          margin-right: 2rem;
-                        `}
-                      >
-                        {'Amount: '}
-                        {order.type === 'buy' ? '+' : '-'}
-                        {order.amount + '  '}
-                        {order.collateral}
-                      </StyledText>
-                      <StyledText>{'Rate: $' + order.price}</StyledText>
-                    </div>
-
-                    <div>
-                      <ContextMenu>
-                        <SafeLink href={'https://etherscan.io/tx/' + order.txHash} target="_blank">
-                          <ContextMenuItem>View Tx on Etherscan</ContextMenuItem>
-                        </SafeLink>
-                      </ContextMenu>
-                    </div>
-                  </div>
-                </StyledCell>
-              </TableRow>
-            )
-          })}
-      </Table>
+        renderEntry={data => {
+          return [
+            <StyledText>{data.date.text}</StyledText>,
+            <IdentityBadge entity={data.from} />,
+            <div css="display: flex; align-items: center;">
+              {getIconState(data.state)}
+              <p css="margin-top: 0.25rem; margin-left: 0.25rem;">{data.state}</p>
+            </div>,
+            <p css={data.type === 'buy' ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
+              {data.type === 'buy' ? '+' : '-'}
+              {data.amount + '  '}
+              {data.collateral}
+            </p>,
+            <p css="font-weight: 600;">${data.price}</p>,
+            data.type === 'buy' ? (
+              <div
+                css={`
+                  display: inline-block;
+                  border-radius: 100px;
+                  background-color: rgba(204, 189, 244, 0.3);
+                  padding: 2px 2rem;
+                  text-transform: uppercase;
+                  color: #7546f2;
+                  font-size: 12px;
+                  font-weight: 700;
+                `}
+              >
+                {data.type}
+              </div>
+            ) : (
+              <div
+                css={`
+                  display: inline-block;
+                  border-radius: 100px;
+                  background-color: rgb(255, 212, 140, 0.3);
+                  padding: 2px 2rem;
+                  text-transform: uppercase;
+                  color: #f08658;
+                  font-size: 12px;
+                  font-weight: 700;
+                `}
+              >
+                {data.type}
+              </div>
+            ),
+            <p css="font-weight: 600;">100</p>,
+          ]
+        }}
+        renderEntryActions={data => (
+          <ContextMenu>
+            <SafeLink href={'https://etherscan.io/tx/' + data.txHash} target="_blank">
+              <ContextMenuItem>View Tx on Etherscan</ContextMenuItem>
+            </SafeLink>
+          </ContextMenu>
+        )}
+      />
     </ContentWrapper>
   )
 }
 
 const ContentWrapper = styled.div`
-  .title {
-    font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+
+  .hide {
+    overflow: hidden;
+    height: 0;
   }
 
   .filter-nav {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 2rem;
-  }
-
-  .hide {
-    overflow: hidden;
-    height: 0;
+    margin-right: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   .filter-item {
@@ -359,19 +325,7 @@ const ContentWrapper = styled.div`
     ${unselectable};
   }
 
-  @media only screen and (max-width: 1200px) {
-    padding: 0;
-
-    .title {
-      margin: 1.5rem;
-    }
-
-    .filter-item:last-child {
-      margin-right: 2rem;
-    }
-  }
-
-  @media only screen and (max-width: 975px) {
+  @media only screen and (max-width: 1152px) {
     .filter-nav {
       flex-direction: column;
       margin-bottom: 1rem;
@@ -380,22 +334,13 @@ const ContentWrapper = styled.div`
     .filter-item {
       margin-bottom: 1rem;
     }
-  }
-`
 
-const StyledCell = styled(TableCell)`
-  & > div {
-    flex-direction: column;
-    align-items: start;
+    .filter-item:last-child {
+      margin-right: 2rem;
+    }
   }
 `
 
 const StyledText = styled(Text)`
   white-space: nowrap;
 `
-
-// const StyledIdentityBadge = styled(IdentityBadge)`
-//   background-color: rgb(218, 234, 239);
-// `
-
-// export default props => <Viewport>{({ below, within }) => <Orders {...props} below={below} within={within} />}</Viewport>
