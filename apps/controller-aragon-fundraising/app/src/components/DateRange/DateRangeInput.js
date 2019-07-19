@@ -103,7 +103,7 @@ class DateRangeInput extends React.PureComponent {
       <StyledContainer
         ref={el => (this.rootRef = el)}
         onClick={() => {
-          onClick()
+          onClick && onClick()
           this.setState({ showPicker: true })
         }}
       >
