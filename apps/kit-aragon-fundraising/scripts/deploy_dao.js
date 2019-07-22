@@ -1,10 +1,37 @@
+const sha3 = require('js-sha3').keccak_256
+const coder = require('web3/lib/solidity/coder.js')
+
 const FundraisingKit = artifacts.require('FundraisingKit')
 const TokenMock = artifacts.require('TokenMock')
 const Controller = artifacts.require('AragonFundraisingController')
 
-const getBuyOrderBatchId = receipt => {
-  const event = receipt.logs.find(l => l.event === 'NewBuyOrder')
-  return event.args.batchId
+const getBuyOrderBatchId = tx => {
+  const events = tx.receipt.logs.filter(l => {
+    return l.topics[0] === '0x' + sha3('NewBuyOrder(address,address,uint256,uint256)')
+  })
+  const data = coder.decodeParams(['uint256', 'uint256'], events[0].data.replace('0x', ''))
+
+  return data[1]
+}
+
+const getSellOrderBatchId = tx => {
+  const events = tx.receipt.logs.filter(l => {
+    return l.topics[0] === '0x' + sha3('NewSellOrder(address,address,uint256,uint256)')
+  })
+  const data = coder.decodeParams(['uint256', 'uint256'], events[0].data.replace('0x', ''))
+
+  return data[1]
+}
+
+const createOrder = async (controller, collateral, amount, isBuy, isCleared, isReturned) => {
+  const receipt = isBuy ? await controller.createBuyOrder(collateral.address, amount) : await controller.createSellOrder(collateral.address, amount)
+  if (isCleared || isReturned) {
+    const batchId = isBuy ? getBuyOrderBatchId(receipt) : getSellOrderBatchId(receipt)
+    await increaseBlocks(1)
+    if (isReturned && isBuy) await controller.clearBatchesAndClaimBuy(collateral.address, batchId)
+    else if (isReturned) await controller.clearBatchesAndClaimSell(collateral.address, batchId)
+    else if (isCleared) controller.clearBatches(collateral.address, batchId)
+  }
 }
 
 function increaseBlock() {
@@ -41,8 +68,8 @@ function increaseBlocks(blocks) {
 
 module.exports = async callback => {
   try {
-    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000)
-    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000)
+    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000, 'Dai', 'DAI')
+    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000, 'Aragon', 'ANT')
 
     const kit = await FundraisingKit.at(process.argv[6])
 
@@ -72,13 +99,17 @@ module.exports = async callback => {
 
     await collateral1.approve(marketMakerAddress, 1000000000000000000)
 
-    const receipt4 = await controller.createBuyOrder(collateral1.address, 10000)
+    // BATCH 1: one buy, cleared and claimed
+    await createOrder(controller, collateral1, 1000, true, true, true)
 
-    // const batchId = getBuyOrderBatchId(receipt4)
+    // BATCH 2: one sell, cleared and claimed
+    await createOrder(controller, collateral1, 1, false, true, true)
 
-    await increaseBlocks(1)
+    // BATCH 3: one buy, cleared and NOT claimed
+    await createOrder(controller, collateral1, 1000, true, true, false)
 
-    // const receipt = await curve.createBuyOrder(authorized, ETH, amount, { from: authorized, value: amount })
+    // BATCH 3: one buy, NOT cleared and NOT claimed
+    await createOrder(controller, collateral1, 1000, true, false, false)
 
     console.log('DAO deployed at ' + dao)
 

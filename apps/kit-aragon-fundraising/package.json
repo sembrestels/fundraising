@@ -55,11 +55,13 @@
     "eth-ens-namehash": "^2.0.8",
     "eth-gas-reporter": "^0.1.1",
     "ganache-cli": "^6.0.3",
+    "js-sha3": "^0.8.0",
     "solidity-coverage": "0.5.8",
     "solium": "^1.0.4",
     "truffle": "4.1.14",
     "truffle-extract": "^1.2.1",
-    "truffle-hdwallet-provider": "0.0.3"
+    "truffle-hdwallet-provider": "0.0.3",
+    "web3": "^1.0.0-beta.55"
   },
   "dependencies": {
     "@ablack/fundraising-controller-aragon-fundraising": "^0.1.0",
