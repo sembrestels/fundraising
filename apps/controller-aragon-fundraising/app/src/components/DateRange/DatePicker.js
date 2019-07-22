@@ -213,13 +213,14 @@ const Selector = styled.div`
 `
 
 const ArrowButton = styled(Button.Anchor)`
+  border: none;
+  box-shadow: none;
   font-size: 60%;
   color: ${theme.contentBorder};
 
   &:hover {
-    border: none;
-    box-shadow: none;
     color: inherit;
+    cursor: pointer;
   }
 `
 

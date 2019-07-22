@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
 import { useApi } from '@aragon/api-react'
-import { AppView, Bar, Button, Main, SyncIndicator, TabBar } from '@aragon/ui'
+import { Layout, Tabs, Button, Main, SyncIndicator } from '@aragon/ui'
 import AppHeader from './components/AppHeader/AppHeader'
 import NewOrderSidePanel from './components/NewOrderSidePanel'
 import Reserves from './screens/Reserves'
@@ -41,7 +41,7 @@ const App = () => {
         <SyncIndicator visible={!ready} />
         {ready && (
           <Fragment>
-            <AppView>
+            <Layout>
               <AppHeader
                 heading="Fundraising"
                 action={
@@ -50,13 +50,11 @@ const App = () => {
                   </Button>
                 }
               />
-              <Bar>
-                <TabBar selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
-              </Bar>
+              <Tabs selected={tabIndex} onChange={tabIndex => this.setState({ tabIndex })} items={tabs} />
               {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} />}
               {tabIndex.current === 1 && <Orders />}
               {tabIndex.current === 2 && <Reserves bondedToken={common.bondedToken} reserve={reserve} updateTokenTap={handleTokenTapUpdate} />}
-            </AppView>
+            </Layout>
             <NewOrderSidePanel
               orderAmount={orderAmount.current}
               tokenAmount={tokenAmount.current}

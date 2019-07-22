@@ -7,8 +7,6 @@ export default props => (
     {...props}
     css={`
       float: right;
-      margin-right: 2rem;
-      margin-bottom: 1rem;
     `}
   >
     <IconFilter />

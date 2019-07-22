@@ -1,18 +1,20 @@
 import React, { useCallback, useState } from 'react'
+import { GU, springs, textStyle, Checkbox, useTheme } from '@aragon/ui'
 import PropTypes from 'prop-types'
 import { Transition, animated } from 'react-spring'
-import { GU, springs, textStyle } from '../../style'
-import { useTheme } from '../../theme'
 import { ToggleButton } from './ToggleButton'
 import { OpenedSurfaceBorder } from './OpenedSurfaceBorder'
 
-function ListView({ hasAnyChild, fields, entries }) {
+function ListView({ allSelected, entries, fields, hasAnyChild, onSelect, onSelectAll, renderSelectionCount, selectable }) {
   const theme = useTheme()
 
   const [opened, setOpened] = useState(-1)
+
   const toggleEntry = useCallback(index => {
     setOpened(opened => (opened === index ? -1 : index))
   }, [])
+
+  const sideSpace = selectable || hasAnyChild
 
   return (
     <React.Fragment>
@@ -25,13 +27,14 @@ function ListView({ hasAnyChild, fields, entries }) {
               position: relative;
               padding: 0;
               padding-right: ${3 * GU}px;
-              padding-left: ${(hasAnyChild ? 6.5 : 3) * GU}px;
-              border-bottom: ${Number(index !== entries.length - 1)}px solid
-                ${theme.border};
+              padding-left: ${(sideSpace ? 6.5 : 3) * GU}px;
+              border-bottom: ${Number(index !== entries.length - 1)}px solid ${theme.border};
+              transition: background 150ms ease-in-out;
+              background: ${entry.selected ? theme.surfaceSelected : 'none'};
             `}
           >
             <OpenedSurfaceBorder opened={entry.index === opened} />
-            {hasChildren && (
+            {sideSpace && (
               <div
                 css={`
                   position: absolute;
@@ -42,10 +45,11 @@ function ListView({ hasAnyChild, fields, entries }) {
                   width: ${6.5 * GU}px;
                 `}
               >
-                <ToggleButton
-                  opened={entry.index === opened}
-                  onClick={() => toggleEntry(entry.index)}
-                />
+                {selectable ? (
+                  <Select index={entry.index} selected={entry.selected} onSelect={onSelect} />
+                ) : (
+                  <ToggleButton opened={entry.index === opened} onClick={() => toggleEntry(entry.index)} />
+                )}
               </div>
             )}
             {entry.actions && (
@@ -60,7 +64,7 @@ function ListView({ hasAnyChild, fields, entries }) {
               </div>
             )}
             <div>
-              {entry.values
+              {entry.entryNodes
                 .map((content, index) => [
                   // field content
                   content,
@@ -71,15 +75,13 @@ function ListView({ hasAnyChild, fields, entries }) {
                 ])
                 // sort by priority
                 .sort((a, b) => b[2] - a[2])
-                .map(([content, label], index, values) => (
+                .map(([content, label], index, entryNodes) => (
                   <div
                     key={index}
                     css={`
                       display: flex;
                       flex-direction: column;
-                      padding-bottom: ${index === values.length - 1
-                        ? 2 * GU
-                        : 0}px;
+                      padding-bottom: ${index === entryNodes.length - 1 ? 2 * GU : 0}px;
                     `}
                   >
                     <div
@@ -148,9 +150,29 @@ function ListView({ hasAnyChild, fields, entries }) {
 }
 
 ListView.propTypes = {
+  allSelected: PropTypes.oneOf([-1, 0, 1]).isRequired,
   entries: PropTypes.array.isRequired,
   fields: PropTypes.array.isRequired,
   hasAnyChild: PropTypes.bool.isRequired,
+  onSelect: PropTypes.func.isRequired,
+  onSelectAll: PropTypes.func.isRequired,
+  renderSelectionCount: PropTypes.func.isRequired,
+  selectable: PropTypes.bool.isRequired,
 }
+
+/* eslint-disable react/prop-types */
+
+function Select({ index, selected, onSelect }) {
+  const change = useCallback(
+    check => {
+      onSelect(index, check)
+    },
+    [index, onSelect]
+  )
+
+  return <Checkbox onChange={change} checked={selected} />
+}
+
+/* eslint-enable react/prop-types */
 
 export { ListView }

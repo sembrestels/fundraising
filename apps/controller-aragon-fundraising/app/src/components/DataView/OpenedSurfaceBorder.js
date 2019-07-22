@@ -1,18 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { springs, useTheme } from '@aragon/ui'
 import { Spring, animated } from 'react-spring'
-import { springs } from '../../style'
-import { useTheme } from '../../theme'
 
 function OpenedSurfaceBorder({ opened, ...props }) {
   const theme = useTheme()
   return (
-    <Spring
-      native
-      from={{ width: 0 }}
-      to={{ width: Number(opened) }}
-      config={{ ...springs.smooth }}
-    >
+    <Spring native from={{ width: 0 }} to={{ width: Number(opened) }} config={{ ...springs.smooth }}>
       {({ width }) => (
         <animated.div
           css={`

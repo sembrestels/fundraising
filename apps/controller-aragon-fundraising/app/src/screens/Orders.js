@@ -4,7 +4,6 @@ import {
   Text,
   theme,
   unselectable,
-  ToggleFiltersButton,
   IdentityBadge,
   useLayout,
   ContextMenu,
@@ -193,7 +192,8 @@ export default () => {
         onPageChange={setPage}
         fields={['Date', 'Address', 'Status', 'Order Amount', 'Token Price', 'Order Type', 'Tokens']}
         entries={filter(multiplyArray(orders, 10), state)}
-        renderHeader={
+        mode={layoutName !== 'large' ? 'list' : 'table'}
+        heading={
           <div>
             {layoutName !== 'large' && <ToggleFiltersButton onClick={() => setState({ ...state, showFilters: !state.showFilters })} />}
             <div className={layoutName !== 'large' ? (state.showFilters ? 'filter-nav' : ' filter-nav hide') : 'filter-nav'}>

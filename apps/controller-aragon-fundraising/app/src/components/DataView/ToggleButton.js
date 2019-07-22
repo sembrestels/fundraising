@@ -1,9 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { ButtonIcon } from '../Button/ButtonIcon'
-import { IconDown, IconUp } from '../../icons'
-import { useTheme } from '../../theme'
-import { RADIUS } from '../../style'
+import { ButtonIcon, IconDown, IconUp, useTheme, RADIUS } from '@aragon/ui'
 
 function ToggleButton({ onClick, opened }) {
   const theme = useTheme()
