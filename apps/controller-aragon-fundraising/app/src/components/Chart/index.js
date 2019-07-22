@@ -1,4 +1,4 @@
-import { DropDown } from '@aragon/ui'
+import { Box, DropDown } from '@aragon/ui'
 import { differenceInDays, format, startOfMinute, startOfMonth, startOfWeek, subDays, subHours, subSeconds, startOfDay, endOfDay } from 'date-fns'
 import React, { useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -287,11 +287,8 @@ export default () => {
   )
 }
 
-const Chart = styled.div`
-  background: #fff;
-  border: 1px solid #dde4e9;
+const Chart = styled(Box)`
   box-sizing: border-box;
-  border-radius: 3px;
 
   .navbar {
     display: flex;

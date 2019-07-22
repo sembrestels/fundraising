@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import {
+  DataView,
   DropDown,
   SafeLink,
   Text,
@@ -12,13 +13,12 @@ import {
   IconCheck,
   IconCross,
   IconEllipsis,
-  ToggleFiltersButton,
 } from '@aragon/ui'
 import BN from 'bignumber.js'
 import { format } from 'date-fns'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
-import { DataView } from '../components/DataView/DataView'
+import ToggleFiltersButton from '../components/ToggleFiltersButton'
 
 const orders = [
   {
@@ -341,6 +341,7 @@ const ContentWrapper = styled.div`
     }
 
     .filter-item {
+      margin-left: 0;
       margin-bottom: 1rem;
     }
 

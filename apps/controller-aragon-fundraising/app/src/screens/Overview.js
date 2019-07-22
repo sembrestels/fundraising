@@ -6,7 +6,7 @@ import Chart from '../components/Chart'
 export default ({ bondedToken, overview }) => {
   const { price, marketCap, reserve, tap } = overview
   return (
-    <ContentWrapper>
+    <div>
       <KeyMetrics heading="Key metrics" padding={false}>
         <ul>
           <li>
@@ -54,19 +54,9 @@ export default ({ bondedToken, overview }) => {
         </ul>
       </KeyMetrics>
       <Chart />
-    </ContentWrapper>
+    </div>
   )
 }
-
-const ContentWrapper = styled.div`
-  margin: 1rem 0;
-  @media only screen and (max-width: 768px) {
-    margin: 1rem;
-  }
-  @media only screen and (max-width: 700px) {
-    padding: 0;
-  }
-`
 
 const KeyMetrics = styled(Box)`
   margin-bottom: 1rem;
