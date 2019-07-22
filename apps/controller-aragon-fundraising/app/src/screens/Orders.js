@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import {
   DropDown,
   SafeLink,
@@ -11,13 +12,12 @@ import {
   IconCheck,
   IconCross,
   IconEllipsis,
+  ToggleFiltersButton,
 } from '@aragon/ui'
 import BN from 'bignumber.js'
 import { format } from 'date-fns'
-import React, { useState } from 'react'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
-import ToggleFiltersButton from '../components/ToggleFiltersButton'
 import { DataView } from '../components/DataView/DataView'
 
 const orders = [

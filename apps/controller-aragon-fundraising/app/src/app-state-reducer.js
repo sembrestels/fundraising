@@ -53,8 +53,8 @@ const withOrderState = (order, clearedBatches, returns) => {
  * @returns {Object} a reduced state, easier to interact with on the frontend
  */
 const appStateReducer = state => {
-  // console.log(state)
-
+  // TODO: remove this quick and dirty hack
+  if (process.env.NODE_ENV === 'development') return JSON.parse(process.env.MOCK)
   // don't reduce not yet populated state
   if (ready(state)) {
     // compute some data to handle it easier on the frontend

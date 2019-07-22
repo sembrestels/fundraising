@@ -50,7 +50,7 @@ const App = () => {
                   </Button>
                 }
               />
-              <Tabs selected={tabIndex} onChange={tabIndex => this.setState({ tabIndex })} items={tabs} />
+              <Tabs selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
               {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} />}
               {tabIndex.current === 1 && <Orders />}
               {tabIndex.current === 2 && <Reserves bondedToken={common.bondedToken} reserve={reserve} updateTokenTap={handleTokenTapUpdate} />}
