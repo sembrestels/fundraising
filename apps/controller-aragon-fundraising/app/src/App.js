@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { useApi } from '@aragon/api-react'
 import { AppView, Bar, Button, Main, SyncIndicator, TabBar } from '@aragon/ui'
 import AppHeader from './components/AppHeader/AppHeader'
@@ -12,7 +12,9 @@ import { AppLogicProvider, useAppLogic } from './app-logic'
 const tabs = ['Overview', 'Orders', 'Reserve Settings']
 
 const App = () => {
-  const { orderPanel, orderAmount, tokenAmount, token, tabIndex, isSyncing } = useAppLogic()
+  const { isSyncing, ui, common, overview, reserve } = useAppLogic()
+  const ready = !isSyncing && common && overview && reserve
+  const { orderPanel, orderAmount, tokenAmount, token, tabIndex } = ui
   const api = useApi()
 
   const handlePlaceOrder = async (collateralTokenAddress, amount, isBuyOrder) => {
@@ -36,32 +38,36 @@ const App = () => {
   return (
     <div css="min-width: 320px">
       <Main assetsUrl="./">
-        <SyncIndicator visible={isSyncing} />
-        <AppView>
-          <AppHeader
-            heading="Fundraising"
-            action={
-              <Button mode="strong" label="New Order" onClick={() => orderPanel.set(true)}>
-                New Order
-              </Button>
-            }
-          />
-          <Bar>
-            <TabBar selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
-          </Bar>
-          {tabIndex.current === 0 && <Overview />}
-          {tabIndex.current === 1 && <Orders />}
-          {tabIndex.current === 2 && <Reserves updateTokenTap={handleTokenTapUpdate} />}
-        </AppView>
-        <NewOrderSidePanel
-          orderAmount={orderAmount.current}
-          tokenAmount={tokenAmount.current}
-          token={token.current}
-          price={300.0}
-          opened={orderPanel.current}
-          onClose={() => orderPanel.set(false)}
-          onSubmit={handlePlaceOrder}
-        />
+        <SyncIndicator visible={!ready} />
+        {ready && (
+          <Fragment>
+            <AppView>
+              <AppHeader
+                heading="Fundraising"
+                action={
+                  <Button mode="strong" label="New Order" onClick={() => orderPanel.set(true)}>
+                    New Order
+                  </Button>
+                }
+              />
+              <Bar>
+                <TabBar selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
+              </Bar>
+              {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} />}
+              {tabIndex.current === 1 && <Orders />}
+              {tabIndex.current === 2 && <Reserves bondedToken={common.bondedToken} reserve={reserve} updateTokenTap={handleTokenTapUpdate} />}
+            </AppView>
+            <NewOrderSidePanel
+              orderAmount={orderAmount.current}
+              tokenAmount={tokenAmount.current}
+              token={token.current}
+              price={300.0}
+              opened={orderPanel.current}
+              onClose={() => orderPanel.set(false)}
+              onSubmit={handlePlaceOrder}
+            />
+          </Fragment>
+        )}
       </Main>
     </div>
   )

@@ -1,36 +1,10 @@
-import BN from 'bignumber.js'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
+import { Box } from '@aragon/ui'
 import Chart from '../components/Chart'
-import Box from '../components/Box/Box'
 
-const CONVERT_API_BASE = 'https://min-api.cryptocompare.com/data'
-
-const convertApiUrl = symbols => `${CONVERT_API_BASE}/price?fsym=USD&tsyms=${symbols.join(',')}`
-
-const formatCollateral = amount => new BN(amount).toFormat(0)
-
-const convertToUSD = (collateral, rate) => new BN(collateral).div(new BN(rate)).toFormat(2)
-
-export default () => {
-  const [state, setState] = useState({
-    daiCollateral: 103039,
-    antCollateral: 60421,
-    daiRate: 0,
-    antRate: 0,
-  })
-  const { daiCollateral, daiRate, antCollateral, antRate } = state
-  useEffect(() => {
-    async function getRates() {
-      const res = await fetch(convertApiUrl(['DAI', 'ANT']))
-      const rates = await res.json()
-      setState({ ...state, daiRate: rates['DAI'], antRate: rates['ANT'] })
-    }
-    getRates()
-
-    const id = setInterval(getRates, 10000)
-    return () => clearInterval(id)
-  }, [])
+export default ({ bondedToken, overview }) => {
+  const { price, marketCap, reserve, tap } = overview
   return (
     <ContentWrapper>
       <KeyMetrics heading="Key metrics" padding={false}>
@@ -38,14 +12,14 @@ export default () => {
           <li>
             <div>
               <p className="title">Price</p>
-              <p className="number">$106,03.36</p>
+              <p className="number">${price}</p>
             </div>
             <p className="sub-number green">+$4.82 (0.5%)</p>
           </li>
           <li>
             <div>
               <p className="title">Market Cap</p>
-              <p className="number">$675,02 M</p>
+              <p className="number">${marketCap}</p>
             </div>
             <p className="sub-number green">+$4.82M</p>
           </li>
@@ -59,21 +33,21 @@ export default () => {
           <li>
             <div>
               <p className="title">Token Supply</p>
-              <p className="number">100,013 M</p>
+              <p className="number">{bondedToken.totalSupply}</p>
             </div>
             <p className="sub-number red">-$23.82 (0.5%)</p>
           </li>
           <li>
             <div>
               <p className="title">Reserves</p>
-              <p className="number">$25,07 M</p>
+              <p className="number">{reserve}</p>
             </div>
             <p className="sub-number red">-$0.82M</p>
           </li>
           <li>
             <div>
               <p className="title">Monthly Allowance</p>
-              <p className="number">$150.5 K</p>
+              <p className="number">{tap}</p>
             </div>
             <p className="sub-number green">$48M (Y)</p>
           </li>

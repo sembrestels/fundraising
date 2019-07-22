@@ -1,4 +1,18 @@
-import { Badge, ContextMenu, ContextMenuItem, DropDown, SafeLink, Table, TableCell, TableHeader, TableRow, Text, theme, unselectable } from '@aragon/ui'
+import {
+  Badge,
+  ContextMenu,
+  ContextMenuItem,
+  DropDown,
+  SafeLink,
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+  Text,
+  theme,
+  unselectable,
+  useViewport,
+} from '@aragon/ui'
 import BN from 'bignumber.js'
 import { format } from 'date-fns'
 import React, { useState } from 'react'
@@ -6,7 +20,6 @@ import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
 import ToggleFiltersButton from '../components/ToggleFiltersButton'
 // import IdentityBadge from '../components/IdentityBadge/IdentityBadge'
-import { useViewport } from '../providers'
 
 const orders = [
   {

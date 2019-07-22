@@ -1,8 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Badge, Button, Card, Form, Field, Table, TableRow, TableCell, Text, theme } from '@aragon/ui'
+import React, { useRef, useState } from 'react'
+import { Badge, Box, Button, Text, TextInput } from '@aragon/ui'
 import styled from 'styled-components'
-import Box from '../components/Box/Box'
-import TextInput from '../components/Input/TextInput'
 import EditIcon from '../assets/EditIcon.svg'
 import HoverNotification from '../components/HoverNotification/HoverNotification'
 
@@ -11,103 +9,6 @@ const hoverTextNotifications = [
   'This will update the monthly allocation (tap rate) i.e. how much funds can be released within the bonding curve contract per 30-day period. Note: this value must be less than the max increase limit set inside the contract.',
   "You're essentially bonding collateral when buying tokens (increasing the supply), and burning collateral when selling tokens (decreasing the supply). These relationships are defined by the smart contract.",
 ]
-
-export default () => {
-  const [state, setState] = useState({
-    transferable: false,
-    monthlyAllocation: 1000,
-    totalSupply: 15000.456,
-    antRatio: 60,
-    daiRatio: 40,
-  })
-
-  const { transferable, monthlyAllocation, totalSupply, antRatio, daiRatio } = state
-  const inputRef = useRef(monthlyAllocation)
-
-  const handleMonthlyChange = event => {
-    setState({ ...state, monthlyAllocation: event.target.value })
-  }
-  const onButtonClick = () => {
-    const updatedAllocation = inputRef.current.value
-    // call contract api to update if they have valid permissions
-    this.props.updateTokenTap(updatedAllocation)
-  }
-
-  return (
-    <ContentWrapper>
-      <div className="settings">
-        <h1 className="title bold">Edit reserve settings</h1>
-        <div className="settings-content">
-          <div css="margin-right: 4rem;">
-            <div css="display: flex; flex-direction: column; margin-bottom: 1rem;">
-            {NotificationLabel('Monthly allocation', hoverTextNotifications[0])}
-              <StyledTextInput
-                ref={inputRef}
-                adornment={
-                  <Text as="p" style={{ paddingRight: '12px' }}>
-                    DAI
-                  </Text>
-                }
-                adornmentPosition={'end'}
-                value={monthlyAllocation}
-                onChange={handleMonthlyChange}
-                required
-              />
-            </div>
-            <Button type="submit" css={buttonStyle} onSubmit={onButtonClick}>
-              <img style={{ marginTop: '6px' }} src={EditIcon} />
-              <p
-                css={`
-                  margin-top: 4px;
-                  margin-left: 0.5rem;
-                `}
-              >
-                Edit monthly allocation
-              </p>
-            </Button>
-          </div>
-          <div>
-            <div css="display: flex; flex-direction: column; margin-bottom: 1.5rem;">
-            {NotificationLabel('ANT collateralization ratio', hoverTextNotifications[1])}
-              <Text>{antRatio}%</Text>
-            </div>
-            <div css="display: flex; flex-direction: column;">
-            {NotificationLabel('DAI collateralization ratio', hoverTextNotifications[1])}
-              <Text>{daiRatio}%</Text>
-            </div>
-          </div>
-        </div>
-      </div>
-      <Box heading="Monthly Allowance" css={monthlyAllowanceStyle}>
-        <div className="item">
-          <p>Total Supply</p>
-          <p className="bold">{totalSupply}</p>
-        </div>
-
-        <div className="item">
-          <p>Transferable</p>
-          <p className="bold">{transferable ? 'YES' : 'NO'}</p>
-        </div>
-
-        <div className="item">
-          <p>Token</p>
-          <Badge css="height: 100%;">Ethical (ETH)</Badge>
-        </div>
-      </Box>
-    </ContentWrapper>
-  )
-}
-
-const NotificationLabel = (label, hoverText) => (
-  <Text css="margin-bottom: 0.5rem;">
-    {label}
-    <HoverNotification copy={hoverText}>
-      <Badge.Notification style={{ margin: '0 10px', cursor: 'pointer', background: '#7C80F2', boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.15)' }}>
-        ?
-      </Badge.Notification>
-    </HoverNotification>
-  </Text>
-)
 
 const StyledTextInput = styled(TextInput)`
   width: 100%;
@@ -123,7 +24,7 @@ const buttonStyle = `
   width: min-content;
 `
 
-const monthlyAllowanceStyle = `
+const bondedTokenStyle = `
   width: 25%;
   height: 100%;
 
@@ -212,3 +113,91 @@ const ContentWrapper = styled.div`
     }
   }
 `
+
+export default ({ bondedToken, reserve, updateTokenTap }) => {
+  const { tap, collateralTokens } = reserve
+  const [monthlyAllocation, setMonthlyAllocation] = useState(tap)
+
+  const inputRef = useRef(monthlyAllocation)
+
+  const handleMonthlyChange = event => {
+    setMonthlyAllocation(event.target.value)
+  }
+  const onButtonClick = () => {
+    const updatedAllocation = inputRef.current.value
+    // call contract api to update if they have valid permissions
+    updateTokenTap(updatedAllocation)
+  }
+
+  return (
+    <ContentWrapper>
+      <div className="settings">
+        <h1 className="title bold">Edit reserve settings</h1>
+        <div className="settings-content">
+          <div css="margin-right: 4rem;">
+            <div css="display: flex; flex-direction: column; margin-bottom: 1rem;">
+              {NotificationLabel('Monthly allocation', hoverTextNotifications[0])}
+              <StyledTextInput
+                ref={inputRef}
+                adornment={
+                  <Text as="p" style={{ paddingRight: '12px' }}>
+                    DAI
+                  </Text>
+                }
+                adornmentPosition={'end'}
+                value={monthlyAllocation}
+                onChange={handleMonthlyChange}
+                required
+              />
+            </div>
+            <Button type="submit" css={buttonStyle} onClick={onButtonClick}>
+              <img style={{ marginTop: '6px' }} src={EditIcon} />
+              <p
+                css={`
+                  margin-top: 4px;
+                  margin-left: 0.5rem;
+                `}
+              >
+                Edit monthly allocation
+              </p>
+            </Button>
+          </div>
+          <div>
+            {collateralTokens.map(({ symbol, ratio }, i) => {
+              return (
+                <div css="display: flex; flex-direction: column; margin-bottom: 1.5rem;" key={i}>
+                  {NotificationLabel(`${symbol} collateralization ratio`, hoverTextNotifications[1])}
+                  <Text>{ratio}%</Text>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      <Box heading="Bonded Token" css={bondedTokenStyle}>
+        <div className="item">
+          <p>Total Supply</p>
+          <p className="bold">{bondedToken.totalSupply}</p>
+        </div>
+
+        <div className="item">
+          <p>Token</p>
+          <Badge css="height: 100%;">
+            {bondedToken.name} ({bondedToken.symbol})
+          </Badge>
+        </div>
+      </Box>
+    </ContentWrapper>
+  )
+}
+
+const NotificationLabel = (label, hoverText) => (
+  <Text css="margin-bottom: 0.5rem;">
+    {label}
+    <HoverNotification copy={hoverText}>
+      <Badge.Notification style={{ margin: '0 10px', cursor: 'pointer', background: '#7C80F2', boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.15)' }}>
+        ?
+      </Badge.Notification>
+    </HoverNotification>
+  </Text>
+)
