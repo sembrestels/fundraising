@@ -96,8 +96,8 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     event NewBuyOrder(address indexed buyer, address indexed collateralToken, uint256 value, uint256 batchId);
     event NewSellOrder(address indexed seller, address indexed collateralToken, uint256 amount, uint256 batchId);
     event ClearBatch(address indexed collateralToken, uint256 batchId);
-    event ReturnBuy(address indexed buyer, address indexed collateralToken, uint256 amount);
-    event ReturnSell(address indexed seller, address indexed collateralToken, uint256 value);
+    event ReturnBuy(address indexed buyer, address indexed collateralToken, uint256 amount, uint256 batchId);
+    event ReturnSell(address indexed seller, address indexed collateralToken, uint256 value, uint256 batchId);
 
     function initialize(
         IMarketMakerController _controller,
@@ -611,7 +611,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
             tokenManager.mint(_buyer, buyReturn);
         }
 
-        emit ReturnBuy(_buyer, _collateralToken, buyReturn);
+        emit ReturnBuy(_buyer, _collateralToken, buyReturn, _batchId);
     }
 
     function _claimSell(address _seller, address _collateralToken, uint256 _batchId) internal {
@@ -629,7 +629,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
             reserve.transfer(_collateralToken, beneficiary, fee);
         }
 
-        emit ReturnSell(_seller, _collateralToken, amountAfterFee);
+        emit ReturnSell(_seller, _collateralToken, amountAfterFee, _batchId);
     }
 
     function _transfer(address _from, address _to, address _collateralToken, uint256 _amount) internal {

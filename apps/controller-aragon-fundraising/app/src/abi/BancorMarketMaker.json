@@ -663,6 +663,11 @@
         "indexed": false,
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "batchId",
+        "type": "uint256"
       }
     ],
     "name": "ReturnBuy",
@@ -684,6 +689,11 @@
       {
         "indexed": false,
         "name": "value",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "batchId",
         "type": "uint256"
       }
     ],
