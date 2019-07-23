@@ -195,7 +195,9 @@ export default () => {
         mode={layoutName !== 'large' ? 'list' : 'table'}
         heading={
           <div>
-            {layoutName !== 'large' && <ToggleFiltersButton onClick={() => setState({ ...state, showFilters: !state.showFilters })} />}
+            {layoutName !== 'large' && (
+              <ToggleFiltersButton onClick={() => setState({ ...state, showFilters: !state.showFilters })} active={state.showFilters} />
+            )}
             <div className={layoutName !== 'large' ? (state.showFilters ? 'filter-nav' : ' filter-nav hide') : 'filter-nav'}>
               <div className="filter-item">
                 <DateRangeInput

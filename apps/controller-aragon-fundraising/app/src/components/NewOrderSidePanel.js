@@ -107,19 +107,29 @@ export default class NewOrderSidePanel extends React.Component {
         <div>
           <div>
             <Text weight="bold">TOTAL</Text>
-            <div css="float: right;">
-              <Text weight="bold" css={isBuyOrder ? 'margin-right: 1.5rem;' : 'margin-right: 21px;'}>
-                0
-              </Text>
+            <div
+              css={`
+                float: right;
+                display: flex;
+                justify-content: space-between;
+                width: 3.5rem;
+              `}
+            >
+              <Text weight="bold">0</Text>
               <Text weight="bold">{isBuyOrder ? 'ATL' : 'USD'}</Text>
             </div>
           </div>
           <div css="margin-bottom: 2rem;">
             <Text weight="bold" />
-            <div css="float: right;">
-              <Text color="grey" css={isBuyOrder ? 'margin-right: 21px;' : 'margin-right: 1.5rem;'}>
-                0
-              </Text>
+            <div
+              css={`
+                float: right;
+                display: flex;
+                justify-content: space-between;
+                width: 3.5rem;
+              `}
+            >
+              <Text color="grey">0</Text>
               <Text color="grey">{isBuyOrder ? 'USD' : 'ATL'}</Text>
             </div>
           </div>
@@ -160,7 +170,7 @@ export default class NewOrderSidePanel extends React.Component {
               margin-bottom: 3rem;
             `}
           >
-            <div css="width: 50%;">
+            <div>
               <p
                 css={`
                   text-transform: uppercase;

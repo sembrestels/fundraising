@@ -9,6 +9,6 @@ export default props => (
       float: right;
     `}
   >
-    <IconFilter />
+    <IconFilter color={props.active ? '#00CBE6' : ''} />
   </ButtonIcon>
 )
