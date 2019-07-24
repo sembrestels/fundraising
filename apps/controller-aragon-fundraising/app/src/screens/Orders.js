@@ -15,99 +15,13 @@ import {
   IconEllipsis,
 } from '@aragon/ui'
 import BN from 'bignumber.js'
-import { format } from 'date-fns'
+import { format, subYears } from 'date-fns'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
 import ToggleFiltersButton from '../components/ToggleFiltersButton'
+import { Order } from '../constants'
 
-const orders = [
-  {
-    id: 1,
-    date: '25/03/2019',
-    type: 'buy',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'ANT',
-    amount: 0.4,
-    price: '200.33',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Pending',
-  },
-  {
-    id: 2,
-    date: '25/03/2019',
-    type: 'buy',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'ANT',
-    amount: 0.4,
-    price: '4212.21',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Confirmed',
-  },
-  {
-    id: 3,
-    date: '25/03/2019',
-    type: 'sell',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'ETH',
-    amount: 0.4,
-    price: '2192.45',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cancelled',
-  },
-  {
-    id: 4,
-    date: '25/03/2019',
-    type: 'buy',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'ETH',
-    amount: 0.4,
-    price: '20.50',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cancelled',
-  },
-  {
-    id: 5,
-    date: '25/03/2019',
-    type: 'sell',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'DAI',
-    amount: 0.4,
-    price: '330.50',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cancelled',
-  },
-  {
-    id: 6,
-    date: '25/03/2019',
-    type: 'sell',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'ANT',
-    amount: 0.4,
-    price: '977.25',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cancelled',
-  },
-  {
-    id: 7,
-    date: '25/03/2019',
-    type: 'buy',
-    from: '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4',
-    collateral: 'DAI',
-    amount: 0.4,
-    price: '0.50',
-    txHash: '0xbd0a2fcb1143f1bb2c195965a776840240698bfe163f200173f9dc6b18211005',
-    state: 'Cancelled',
-  },
-].map((order, idx) => {
-  order.date = {
-    value: new Date().getTime() + idx * 10000000,
-    text: format(new Date().getTime() + idx * 10000000, 'MM/dd/yyyy - HH:mm', { awareOfUnicodeTokens: true }),
-  }
-
-  return order
-})
-
-function multiplyArray(base, times) {
+const multiplyArray = (base, times) => {
   return [...Array(times)].reduce(v => [...v, ...base], [])
 }
 
@@ -133,13 +47,13 @@ const filter = (orders, state) => {
         }
 
         if (type === 'holder' && filter.payload[filter.active] !== 'All') {
-          if (filter.payload[filter.active].toLowerCase() !== order.from.toLowerCase()) {
+          if (filter.payload[filter.active].toLowerCase() !== order.address.toLowerCase()) {
             return false
           }
         }
 
         if (type === 'date') {
-          if (filter.payload.start > order.date.value || filter.payload.end < order.date.value) {
+          if (filter.payload.start > order.timestamp || filter.payload.end < order.timestamp) {
             return false
           }
         }
@@ -161,28 +75,28 @@ const filter = (orders, state) => {
     })
 }
 
-function getIconState(state) {
-  if (state === 'Confirmed') {
+const getIconState = state => {
+  if (state === Order.State.RETURNED) {
     return <IconCheck size="small" color="#2CC68F" />
-  } else if (state === 'Cancelled') {
+  } else if (state === Order.State.CLEARED) {
     return <IconCross size="small" color="#FB7777" />
-  } else if (state === 'Pending') {
+  } else if (state === Order.State.PENDING) {
     return <IconEllipsis size="small" color="#6D777B" />
   }
 }
 
-export default () => {
+const getHolders = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.address))))
+
+export default ({ orders }) => {
   const [state, setState] = useState({
     order: { active: 0, payload: ['All', 'Buy', 'Sell'] },
     price: { active: 0, payload: ['Default', 'Ascending', 'Descending'] },
     token: { active: 0, payload: ['All', 'DAI', 'ANT', 'ETH'] },
-    holder: { active: 0, payload: ['All', '0x277bfcf7c2e162cb1ac3e9ae228a3132a75f83d4'] },
-    date: { payload: { start: new Date().getTime() - 1000000, end: new Date().getTime() + 7 * 10000000 } },
+    holder: { active: 0, payload: getHolders(orders) },
+    date: { payload: { start: subYears(new Date(), 1).getTime(), end: new Date().getTime() } },
     showFilters: false,
   })
-
   const [page, setPage] = useState(0)
-
   const { name: layoutName } = useLayout()
 
   return (
@@ -242,19 +156,19 @@ export default () => {
         }
         renderEntry={data => {
           return [
-            <StyledText>{data.date.text}</StyledText>,
-            <IdentityBadge entity={data.from} />,
+            <StyledText>{format(data.timestamp, 'MM/dd/yyyy - HH:mm:ss', { awareOfUnicodeTokens: true })}</StyledText>,
+            <IdentityBadge entity={data.address} />,
             <div css="display: flex; align-items: center;">
               {getIconState(data.state)}
-              <p css="margin-top: 0.25rem; margin-left: 0.25rem;">{data.state}</p>
+              <p css="margin-top: 0.25rem; margin-left: 0.25rem;">{data.state.charAt(0) + data.state.slice(1).toLowerCase()}</p>
             </div>,
-            <p css={data.type === 'buy' ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
-              {data.type === 'buy' ? '+' : '-'}
+            <p css={data.type === Order.Type.BUY ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
+              {data.type === Order.Type.BUY ? '+' : '-'}
               {data.amount + '  '}
               {data.collateral}
             </p>,
             <p css="font-weight: 600;">${data.price}</p>,
-            data.type === 'buy' ? (
+            data.type === Order.Type.BUY ? (
               <div
                 css={`
                   display: inline-block;
@@ -285,7 +199,7 @@ export default () => {
                 {data.type}
               </div>
             ),
-            <p css="font-weight: 600;">100</p>,
+            <p css="font-weight: 600;">{data.tokens}</p>,
           ]
         }}
         renderEntryActions={data => (

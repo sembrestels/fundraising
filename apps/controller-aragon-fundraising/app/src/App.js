@@ -12,7 +12,7 @@ import { AppLogicProvider, useAppLogic } from './app-logic'
 const tabs = ['Overview', 'Orders', 'Reserve Settings']
 
 const App = () => {
-  const { isSyncing, ui, common, overview, reserve } = useAppLogic()
+  const { isSyncing, ui, common, overview, ordersView, reserve } = useAppLogic()
   const ready = !isSyncing && common && overview && reserve
   const { orderPanel, orderAmount, tokenAmount, token, tabIndex } = ui
   const api = useApi()
@@ -52,7 +52,7 @@ const App = () => {
               />
               <Tabs selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
               {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} />}
-              {tabIndex.current === 1 && <Orders />}
+              {tabIndex.current === 1 && <Orders orders={ordersView} />}
               {tabIndex.current === 2 && <Reserves bondedToken={common.bondedToken} reserve={reserve} updateTokenTap={handleTokenTapUpdate} />}
             </Layout>
             <NewOrderSidePanel
