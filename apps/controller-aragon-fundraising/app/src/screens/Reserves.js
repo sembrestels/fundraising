@@ -39,21 +39,16 @@ const bondedTokenStyle = `
     justify-content: space-between;
   }
 
-  .item + .item {
-    margin-top: 1rem;
-  }
-
   @media only screen and (max-width: 1152px) {
     width: 50%;
   }
 
-  @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 768px) {
     width: 100%;
   }
 `
 
 const ContentWrapper = styled.div`
-  padding-top: 1rem;
   display: flex;
 
   .bold {
@@ -101,10 +96,6 @@ const ContentWrapper = styled.div`
   }
 
   @media only screen and (max-width: 768px) {
-    padding: 1rem;
-  }
-
-  @media only screen and (max-width: 600px) {
     flex-direction: column;
 
     .settings {
