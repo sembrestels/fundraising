@@ -86,12 +86,13 @@ const getIconState = state => {
 }
 
 const getHolders = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.address))))
+const getCollaterals = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.collateral))))
 
 export default ({ orders }) => {
   const [state, setState] = useState({
     order: { active: 0, payload: ['All', 'Buy', 'Sell'] },
     price: { active: 0, payload: ['Default', 'Ascending', 'Descending'] },
-    token: { active: 0, payload: ['All', 'DAI', 'ANT', 'ETH'] },
+    token: { active: 0, payload: getCollaterals(orders) },
     holder: { active: 0, payload: getHolders(orders) },
     date: { payload: { start: subYears(new Date(), 1).getTime(), end: new Date().getTime() } },
     showFilters: false,
