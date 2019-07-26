@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Box } from '@aragon/ui'
 import Chart from '../components/Chart'
 
-export default ({ bondedToken, overview }) => {
+export default ({ bondedToken, overview, polledTotalSupply }) => {
   const { price, marketCap, reserve, tap } = overview
   return (
     <div>
@@ -33,7 +33,7 @@ export default ({ bondedToken, overview }) => {
           <li>
             <div>
               <p className="title">Token Supply</p>
-              <p className="number">{bondedToken.totalSupply}</p>
+              <p className="number">{polledTotalSupply || bondedToken.totalSupply}</p>
             </div>
             <p className="sub-number red">-$23.82 (0.5%)</p>
           </li>

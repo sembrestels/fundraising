@@ -105,7 +105,7 @@ const ContentWrapper = styled.div`
   }
 `
 
-export default ({ bondedToken, reserve, updateTokenTap }) => {
+export default ({ bondedToken, reserve, polledTotalSupply, updateTokenTap }) => {
   const { tap, collateralTokens } = reserve
   const [monthlyAllocation, setMonthlyAllocation] = useState(tap)
 
@@ -168,7 +168,7 @@ export default ({ bondedToken, reserve, updateTokenTap }) => {
       <Box heading="Bonded Token" css={bondedTokenStyle}>
         <div className="item">
           <p>Total Supply</p>
-          <p className="bold">{bondedToken.totalSupply}</p>
+          <p className="bold">{polledTotalSupply || bondedToken.totalSupply}</p>
         </div>
 
         <div className="item">

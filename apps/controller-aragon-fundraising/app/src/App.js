@@ -1,13 +1,14 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useState } from 'react'
 import { useApi } from '@aragon/api-react'
 import { Layout, Tabs, Button, Main, SyncIndicator } from '@aragon/ui'
+import { useInterval } from './utils/use-interval'
 import AppHeader from './components/AppHeader/AppHeader'
 import NewOrderSidePanel from './components/NewOrderSidePanel'
 import Reserves from './screens/Reserves'
 import Orders from './screens/Orders'
 import Overview from './screens/Overview'
-
 import { AppLogicProvider, useAppLogic } from './app-logic'
+import miniMeTokenAbi from './abi/MiniMeToken.json'
 
 const tabs = ['Overview', 'Orders', 'Reserve Settings']
 
@@ -16,6 +17,17 @@ const App = () => {
   const ready = !isSyncing && common && overview && reserve
   const { orderPanel, orderAmount, tokenAmount, token, tabIndex } = ui
   const api = useApi()
+
+  const [polledTotalSupply, setPolledTotalSupply] = useState(null)
+
+  // polls the bonded token total supply
+  useInterval(async () => {
+    if (ready) {
+      const bondedTokenContract = api.external(common.bondedToken.address, miniMeTokenAbi)
+      const totalSupply = await bondedTokenContract.totalSupply().toPromise()
+      setPolledTotalSupply(totalSupply)
+    }
+  }, 3000)
 
   const handlePlaceOrder = async (collateralTokenAddress, amount, isBuyOrder) => {
     // TODO: add error handling on failed tx, check token balances
@@ -51,9 +63,11 @@ const App = () => {
                 }
               />
               <Tabs selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
-              {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} />}
+              {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} polledTotalSupply={polledTotalSupply} />}
               {tabIndex.current === 1 && <Orders orders={ordersView} />}
-              {tabIndex.current === 2 && <Reserves bondedToken={common.bondedToken} reserve={reserve} updateTokenTap={handleTokenTapUpdate} />}
+              {tabIndex.current === 2 && (
+                <Reserves bondedToken={common.bondedToken} reserve={reserve} polledTotalSupply={polledTotalSupply} updateTokenTap={handleTokenTapUpdate} />
+              )}
             </Layout>
             <NewOrderSidePanel
               orderAmount={orderAmount.current}

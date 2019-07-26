@@ -10,7 +10,7 @@ import miniMeTokenAbi from './abi/MiniMeToken.json'
 import tokenDecimalsAbi from './abi/token-decimals.json'
 import tokenNameAbi from './abi/token-name.json'
 import tokenSymbolAbi from './abi/token-symbol.json'
-import { retryEvery } from './bg-script/utils'
+import { retryEvery } from './utils/bg-utils'
 import { Order } from './constants'
 
 // abis used to call decimals, name and symbol on a token
@@ -132,6 +132,11 @@ const initState = settings => async cachedState => {
     ...cachedState,
     isSyncing: true,
     connectedAccount: null,
+    addresses: {
+      marketMaker: settings.marketMaker.address,
+      tap: settings.tap.address,
+      pool: settings.pool.address,
+    },
   }
   const withTapData = await loadTapData(newState, settings)
   const withPoolData = await loadPoolData(withTapData, settings)
@@ -188,6 +193,7 @@ const loadMarketMakerData = async (state, settings) => {
     ...state,
     ppm: await settings.marketMaker.contract.PPM().toPromise(),
     bondedToken: {
+      address: bondedToken,
       totalSupply,
       decimals,
       name,
@@ -329,10 +335,23 @@ const returnEvent = (state, { buyer, seller, collateralToken, batchId, value, am
  *                     *
  ***********************/
 
-const loadTokenBalance = (tokenAddress, settings) => {
-  return settings.pool.contract.balance(tokenAddress).toPromise()
+/**
+ * Get the current balance of a given token address
+ * @param {String} tokenAddress - the given token address
+ * @param {Object} settings - the settings where the pool contract is
+ * @returns {String} a promise that resolves the balance
+ */
+const loadTokenBalance = (tokenAddress, { pool }) => {
+  return pool.contract.balance(tokenAddress).toPromise()
 }
 
+/**
+ * Get the decimals of a given token contract
+ * @param {String} tokenContract - token contract
+ * @param {String} tokenAddress - token address
+ * @param {Object} settings - settings object where the network details are
+ * @returns {String} the decimals or a fallback (decimals are optional)
+ */
 const loadTokenDecimals = async (tokenContract, tokenAddress, { network }) => {
   if (tokenDecimals.has(tokenContract)) {
     return tokenDecimals.get(tokenContract)
@@ -351,6 +370,13 @@ const loadTokenDecimals = async (tokenContract, tokenAddress, { network }) => {
   return decimals
 }
 
+/**
+ * Get the name of a given token contract
+ * @param {String} tokenContract - token contract
+ * @param {String} tokenAddress - token address
+ * @param {Object} settings - settings object where the network details are
+ * @returns {String} the name or a fallback (name is optional)
+ */
 const loadTokenName = async (tokenContract, tokenAddress, { network }) => {
   if (tokenNames.has(tokenContract)) {
     return tokenNames.get(tokenContract)
@@ -368,6 +394,13 @@ const loadTokenName = async (tokenContract, tokenAddress, { network }) => {
   return name
 }
 
+/**
+ * Get the symbol of a given token contract
+ * @param {String} tokenContract - token contract
+ * @param {String} tokenAddress - token address
+ * @param {Object} settings - settings object where the network details are
+ * @returns {String} the symbol or a fallback (symbol is optional)
+ */
 const loadTokenSymbol = async (tokenContract, tokenAddress, { network }) => {
   if (tokenSymbols.has(tokenContract)) {
     return tokenSymbols.get(tokenContract)
@@ -385,7 +418,12 @@ const loadTokenSymbol = async (tokenContract, tokenAddress, { network }) => {
   return symbol
 }
 
-export const loadTimestamp = async blockNumber => {
+/**
+ * Gets the timestamp of the given block
+ * @param {String} blockNumber - the block number of which we want the timestamp
+ * @returns {Number} the timestamp of the given block in ms
+ */
+const loadTimestamp = async blockNumber => {
   const block = await app.web3Eth('getBlock', blockNumber).toPromise()
   return parseInt(block.timestamp, 10) * 1000 // in ms
 }

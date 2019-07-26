@@ -79,6 +79,7 @@ const appStateReducer = state => {
       connectedAccount,
       beneficiary,
       bondedToken,
+      addresses,
       // reserve
       ppm,
       taps,
@@ -95,6 +96,7 @@ const appStateReducer = state => {
       connectedAccount,
       beneficiary,
       bondedToken,
+      addresses,
     }
     // overview tab data
     // TODO: get the formula
