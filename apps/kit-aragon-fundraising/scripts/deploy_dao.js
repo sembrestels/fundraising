@@ -34,7 +34,7 @@ const createOrder = async (controller, collateral, amount, isBuy, isCleared, isR
   }
 }
 
-function increaseBlock() {
+const increaseBlock = () => {
   return new Promise((resolve, reject) => {
     web3.currentProvider.sendAsync(
       {
@@ -50,7 +50,7 @@ function increaseBlock() {
   })
 }
 
-function increaseBlocks(blocks) {
+const increaseBlocks = blocks => {
   if (typeof blocks === 'object') {
     blocks = blocks.toNumber(10)
   }
@@ -98,6 +98,7 @@ module.exports = async callback => {
     console.log('OK')
 
     await collateral1.approve(marketMakerAddress, 1000000000000000000)
+    await collateral2.approve(marketMakerAddress, 1000000000000000000)
 
     // BATCH 1: one buy, cleared and claimed
     await createOrder(controller, collateral1, 1000, true, true, true)
@@ -105,10 +106,13 @@ module.exports = async callback => {
     // BATCH 2: one sell, cleared and claimed
     await createOrder(controller, collateral1, 1, false, true, true)
 
-    // BATCH 3: one buy, cleared and NOT claimed
+    // BATCH 3: one buy, cleared and claimed (collateral2)
+    await createOrder(controller, collateral2, 1000, true, true, true)
+
+    // BATCH 4: one buy, cleared and NOT claimed
     await createOrder(controller, collateral1, 1000, true, true, false)
 
-    // BATCH 3: one buy, NOT cleared and NOT claimed
+    // BATCH 5: one buy, NOT cleared and NOT claimed
     await createOrder(controller, collateral1, 1000, true, false, false)
 
     console.log('DAO deployed at ' + dao)
