@@ -15,7 +15,7 @@
   "scripts": {
     "lint": "eslint ./src",
     "sync-assets": "copy-aragon-ui-assets -n aragon-ui ./build && rsync -rtu ./public/ ./build",
-    "start": "NODE_ENV=test && npm run sync-assets && npm run build:script -- --no-minify && parcel serve index.html -p 3001 --out-dir build/",
+    "start": "npm run sync-assets && npm run build:script -- --no-minify && cross-env NODE_ENV=test parcel serve index.html -p 3001 --out-dir build/",
     "build": "npm run sync-assets && npm run build:script && parcel build index.html --out-dir build/ --public-url '.'",
     "build:script": "parcel build src/script.js --out-dir build/"
   },
@@ -44,6 +44,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
+    "cross-env": "^5.2.0",
     "eslint": "5.5.0",
     "eslint-config-prettier": "^3.0.1",
     "eslint-config-standard": "^12.0.0",
