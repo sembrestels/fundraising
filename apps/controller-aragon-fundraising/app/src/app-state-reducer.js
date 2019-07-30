@@ -103,7 +103,6 @@ const appStateReducer = state => {
     const price = 5
     const overview = {
       price,
-      marketCap: price * bondedToken.totalSupply,
       // TODO: handle orders
       reserve: collateralTokens.get(daiAddress).balance,
       tap: taps.get(daiAddress),

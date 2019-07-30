@@ -4,7 +4,8 @@ import { Box } from '@aragon/ui'
 import Chart from '../components/Chart'
 
 export default ({ bondedToken, overview, polledTotalSupply }) => {
-  const { price, marketCap, reserve, tap } = overview
+  const { price, reserve, tap } = overview
+  const marketCap = price * (polledTotalSupply || bondedToken.totalSupply)
   return (
     <div>
       <KeyMetrics heading="Key metrics" padding={false}>

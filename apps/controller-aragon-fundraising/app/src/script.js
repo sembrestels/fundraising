@@ -39,10 +39,14 @@ retryEvery(retry => {
 })
 
 const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
-  // get external smart contracts to listen to their events
+  // get external smart contracts to listen to their events and interact with them
   const marketMakerContract = app.external(marketMakerAddress, marketMakerAbi)
   const tapContract = app.external(tapAddress, tapAbi)
   const poolContract = app.external(poolAddress, poolAbi)
+
+  // preload bonded token contract
+  const bondedTokenAddress = await marketMakerContract.token().toPromise()
+  const bondedTokenContract = app.external(bondedTokenAddress, miniMeTokenAbi)
 
   // get network characteristics
   const network = await app
@@ -64,6 +68,10 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
     pool: {
       address: poolAddress,
       contract: poolContract,
+    },
+    bondedToken: {
+      address: bondedTokenAddress,
+      contract: bondedTokenContract,
     },
   }
 
@@ -107,7 +115,7 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
         case 'NewSellOrder':
           return newOrder(nextState, returnValues, blockNumber, transactionHash)
         case 'ClearBatch':
-          return clearBatch(nextState, returnValues)
+          return clearBatch(nextState, returnValues, settings)
         case 'ReturnBuy':
         case 'ReturnSell':
           return returnEvent(nextState, returnValues)
@@ -180,20 +188,18 @@ const loadPoolData = async (state, settings) => {
  * @returns {Object} the current store's state augmented with the smart contract data
  */
 const loadMarketMakerData = async (state, settings) => {
-  const bondedToken = await settings.marketMaker.contract.token().toPromise()
-  const bondedTokenContract = app.external(bondedToken, miniMeTokenAbi)
   // loads data related to the bonded token
   const [totalSupply, decimals, name, symbol] = await Promise.all([
-    bondedTokenContract.totalSupply().toPromise(),
-    bondedTokenContract.decimals().toPromise(),
-    bondedTokenContract.name().toPromise(),
-    bondedTokenContract.symbol().toPromise(),
+    settings.bondedToken.contract.totalSupply().toPromise(),
+    settings.bondedToken.contract.decimals().toPromise(),
+    settings.bondedToken.contract.name().toPromise(),
+    settings.bondedToken.contract.symbol().toPromise(),
   ])
   return {
     ...state,
     ppm: await settings.marketMaker.contract.PPM().toPromise(),
     bondedToken: {
-      address: bondedToken,
+      address: settings.bondedToken.address,
       totalSupply,
       decimals,
       name,
@@ -305,9 +311,12 @@ const newOrder = async (state, { buyer, seller, collateralToken, batchId, value,
   }
 }
 
-const clearBatch = (state, { batchId, collateralToken }) => {
+const clearBatch = async (state, { batchId, collateralToken }, settings) => {
   const clearedBatches = state.clearedBatches || []
-  clearedBatches.push({ batchId, collateralToken })
+  const totalSupply = await settings.bondedToken.contract.totalSupply().toPromise()
+  const balance = await settings.pool.contract.balance(collateralToken).toPromise()
+  const pricePPM = await settings.marketMaker.contract.getPricePPM(collateralToken, totalSupply, balance).toPromise()
+  clearedBatches.push({ batchId, collateralToken, pricePPM })
   return {
     ...state,
     clearedBatches,

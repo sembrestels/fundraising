@@ -1,14 +1,20 @@
 import { useEffect, useRef } from 'react'
 
+/**
+ * Interval hook that auto cleans on unmounting the component using it
+ * @param {function} callback - function to be called
+ * @param {Number} delay - interval delay
+ * @returns {void}
+ */
 export const useInterval = (callback, delay) => {
   const savedCallback = useRef()
 
-  // Remember the latest callback.
+  // remember the latest callback.
   useEffect(() => {
     savedCallback.current = callback
   }, [callback])
 
-  // Set up the interval.
+  // set up the interval.
   useEffect(() => {
     const tick = () => {
       savedCallback.current()

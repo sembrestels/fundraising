@@ -8,7 +8,7 @@ const use = initialValue => {
   return useMemo(() => ({ current, set }), [current, set])
 }
 
-// Handles the main logic of the app.
+// handles the main logic of the app.
 export const useAppLogic = () => {
   const state = useAppState()
 
