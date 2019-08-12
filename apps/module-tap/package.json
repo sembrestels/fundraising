@@ -30,7 +30,8 @@
   ],
   "dependencies": {
     "@aragon/apps-vault": "4.1.0",
-    "@aragon/os": "4.2.0"
+    "@aragon/os": "4.2.0",
+    "@ablack/fundraising-interface-core": "^0.1.0"
   },
   "devDependencies": {
     "@ablack/eslint-config-tests": "^1.0.0",
@@ -49,7 +50,7 @@
     "eth-gas-reporter": "^0.1.1",
     "ganache-cli": "^6.1.0",
     "prettier": "^1.16.4",
-    "solidity-coverage": "0.5.11",
+    "solidity-coverage": "^0.6.0",
     "solium": "^1.2.3",
     "truffle": "4.1.14"
   }
