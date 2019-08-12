@@ -103,7 +103,7 @@ export default ({ orders }) => {
   return (
     <ContentWrapper>
       <DataView
-        currentPage={page}
+        page={page}
         onPageChange={setPage}
         fields={['Date', 'Address', 'Status', 'Order Amount', 'Token Price', 'Order Type', 'Tokens']}
         entries={filter(multiplyArray(orders, 10), state)}
