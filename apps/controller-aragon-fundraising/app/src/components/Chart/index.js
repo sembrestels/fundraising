@@ -250,7 +250,7 @@ export default () => {
         )}
         <div className="chart-view">
           <p className="chart-view-text">Chart view</p>
-          <DropDown items={items} active={activeItem} onChange={index => setActiveItem(index)} />
+          <DropDown items={items} selected={activeItem} onChange={index => setActiveItem(index)} />
         </div>
       </div>
       {activeItem === 0 && (

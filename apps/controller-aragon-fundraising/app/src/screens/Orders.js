@@ -13,6 +13,7 @@ import {
   IconCheck,
   IconCross,
   IconEllipsis,
+  shortenAddress,
 } from '@aragon/ui'
 import BN from 'bignumber.js'
 import { format, subYears } from 'date-fns'
@@ -99,7 +100,6 @@ export default ({ orders }) => {
   })
   const [page, setPage] = useState(0)
   const { name: layoutName } = useLayout()
-
   return (
     <ContentWrapper>
       <DataView
@@ -126,7 +126,7 @@ export default ({ orders }) => {
                 <span className="filter-label">Holder</span>
                 <DropDown
                   items={state.holder.payload}
-                  active={state.holder.active}
+                  renderLabel={() => shortenAddress(state.holder.payload[state.holder.active])}
                   onChange={idx => setState({ ...state, holder: { ...state.holder, active: idx } })}
                 />
               </div>
@@ -134,7 +134,7 @@ export default ({ orders }) => {
                 <span className="filter-label">Token</span>
                 <DropDown
                   items={state.token.payload}
-                  active={state.token.active}
+                  selected={state.token.active}
                   onChange={idx => setState({ ...state, token: { ...state.token, active: idx } })}
                 />
               </div>
@@ -142,7 +142,7 @@ export default ({ orders }) => {
                 <span className="filter-label">Order Type</span>
                 <DropDown
                   items={state.order.payload}
-                  active={state.order.active}
+                  selected={state.order.active}
                   onChange={idx => setState({ ...state, order: { ...state.order, active: idx } })}
                 />
               </div>
@@ -150,7 +150,7 @@ export default ({ orders }) => {
                 <span className="filter-label">Price</span>
                 <DropDown
                   items={state.price.payload}
-                  active={state.price.active}
+                  selected={state.price.active}
                   onChange={idx => setState({ ...state, price: { ...state.price, active: idx } })}
                 />
               </div>

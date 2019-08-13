@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Badge, Box, Button, Text, TextInput } from '@aragon/ui'
+import { Badge, Box, Button, Text, TextInput, DiscButton } from '@aragon/ui'
 import styled from 'styled-components'
 import EditIcon from '../assets/EditIcon.svg'
 import HoverNotification from '../components/HoverNotification/HoverNotification'
@@ -173,7 +173,7 @@ export default ({ bondedToken, reserve, polledTotalSupply, updateTokenTap }) => 
 
         <div className="item">
           <p>Token</p>
-          <Badge css="height: 100%;">
+          <Badge css="height: 100%;" foreground="#4D22DF" background="rgba(204, 189, 244, 0.16)">
             {bondedToken.name} ({bondedToken.symbol})
           </Badge>
         </div>
@@ -186,9 +186,15 @@ const NotificationLabel = (label, hoverText) => (
   <Text css="margin-bottom: 0.5rem;">
     {label}
     <HoverNotification copy={hoverText}>
-      <Badge.Notification style={{ margin: '0 10px', cursor: 'pointer', background: '#7C80F2', boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.15)' }}>
-        ?
-      </Badge.Notification>
+      <DiscButton size="24" description="Help" css="margin-left: 1rem;">
+        <span
+          css={`
+            font-size: 12px;
+          `}
+        >
+          ?
+        </span>
+      </DiscButton>
     </HoverNotification>
   </Text>
 )
