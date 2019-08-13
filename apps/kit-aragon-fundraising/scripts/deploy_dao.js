@@ -1,36 +1,31 @@
 const sha3 = require('js-sha3').keccak_256
 const coder = require('web3/lib/solidity/coder.js')
+const blockNumber = require('@aragon/test-helpers/blockNumber')(web3)
+
 
 const FundraisingKit = artifacts.require('FundraisingKit')
 const TokenMock = artifacts.require('TokenMock')
 const Controller = artifacts.require('AragonFundraisingController')
+const MarketMaker = artifacts.require('BatchedBancorMarketMaker')
 
-const getBuyOrderBatchId = tx => {
+const getBatchId = (tx, isBuy) => {
+  const event = isBuy ? 'NewBuyOrder(address,uint256,address,uint256,uint256)' : 'NewSellOrder(address,uint256,address,uint256)'
   const events = tx.receipt.logs.filter(l => {
-    return l.topics[0] === '0x' + sha3('NewBuyOrder(address,address,uint256,uint256)')
+    return l.topics[0] === '0x' + sha3(event)
   })
-  const data = coder.decodeParams(['uint256', 'uint256'], events[0].data.replace('0x', ''))
-
+  const data = coder.decodeParams(['address', 'uint256'], events[0].data.replace('0x', ''))
   return data[1]
 }
 
-const getSellOrderBatchId = tx => {
-  const events = tx.receipt.logs.filter(l => {
-    return l.topics[0] === '0x' + sha3('NewSellOrder(address,address,uint256,uint256)')
-  })
-  const data = coder.decodeParams(['uint256', 'uint256'], events[0].data.replace('0x', ''))
-
-  return data[1]
-}
-
-const createOrder = async (controller, collateral, amount, isBuy, isCleared, isReturned) => {
-  const receipt = isBuy ? await controller.createBuyOrder(collateral.address, amount) : await controller.createSellOrder(collateral.address, amount)
-  if (isCleared || isReturned) {
-    const batchId = isBuy ? getBuyOrderBatchId(receipt) : getSellOrderBatchId(receipt)
-    await increaseBlocks(1)
-    if (isReturned && isBuy) await controller.clearBatchesAndClaimBuy(collateral.address, batchId)
-    else if (isReturned) await controller.clearBatchesAndClaimSell(collateral.address, batchId)
-    else if (isCleared) controller.clearBatches(collateral.address, batchId)
+const createOrder = async (controller, collateral, amount, isBuy, isClaimed) => {
+  const receipt = isBuy ? await controller.openBuyOrder(collateral.address, amount) : await controller.openSellOrder(collateral.address, amount)
+  if (isClaimed) {
+    const batchId = getBatchId(receipt, isBuy)
+    // batch size (batchBlocks) is 1 in the kits
+    // increasing by one block should terminate the batch
+    await increaseBlock()
+    if (isBuy) await controller.claimBuyOrder(batchId, collateral.address)
+    else await controller.claimSellOrder(batchId, collateral.address)
   }
 }
 
@@ -47,22 +42,6 @@ const increaseBlock = () => {
         resolve(result)
       }
     )
-  })
-}
-
-const increaseBlocks = blocks => {
-  if (typeof blocks === 'object') {
-    blocks = blocks.toNumber(10)
-  }
-  return new Promise((resolve, reject) => {
-    increaseBlock().then(() => {
-      blocks -= 1
-      if (blocks === 0) {
-        resolve()
-      } else {
-        increaseBlocks(blocks).then(resolve)
-      }
-    })
   })
 }
 
@@ -83,37 +62,35 @@ module.exports = async callback => {
     const dao = receipt2.logs.filter(l => l.event == 'DeployMultisigInstance')[0].args.dao
 
     const controllerAddress = receipt3.logs.filter(
-      l => l.event === 'InstalledApp' && l.args.appId === '0xc48aa5a969ae8dcd08a42cd12dce8c3c494c4ba70eb0d3bef069f20469e04be1'
+      l => l.event === 'InstalledApp' && l.args.appId === '0x668ac370eed7e5861234d1c0a1e512686f53594fcb887e5bcecc35675a4becac'
     )[0].args.appProxy
 
     const marketMakerAddress = receipt3.logs.filter(
-      l => l.event === 'InstalledApp' && l.args.appId === '0xd9f5fb0b31c6211801549521bac548c25cc14dce610e5e4c4ea2857ac4580d05'
+      l => l.event === 'InstalledApp' && l.args.appId === '0xc2bb88ab974c474221f15f691ed9da38be2f5d37364180cec05403c656981bf0'
     )[0].args.appProxy
 
     console.log(controllerAddress)
     console.log(marketMakerAddress)
 
     const controller = await Controller.at(controllerAddress)
-
-    console.log('OK')
+    // const marketMaker = await MarketMaker.at(marketMakerAddress)
 
     await collateral1.approve(marketMakerAddress, 1000000000000000000)
     await collateral2.approve(marketMakerAddress, 1000000000000000000)
 
-    // BATCH 1: one buy, cleared and claimed
-    await createOrder(controller, collateral1, 1000, true, true, true)
+    console.log('OK')
 
-    // BATCH 2: one sell, cleared and claimed
-    await createOrder(controller, collateral1, 1, false, true, true)
+    // BATCH 1: one buy, claimed
+    await createOrder(controller, collateral1, 1121, true, true)
 
-    // BATCH 3: one buy, cleared and claimed (collateral2)
-    await createOrder(controller, collateral2, 1000, true, true, true)
+    // BATCH 2: one sell, claimed
+    // await createOrder(controller, collateral1, 1000, false, true)
+
+    // BATCH 3: one buy, claimed (collateral2)
+    // await createOrder(controller, collateral2, 1000, true, true)
 
     // BATCH 4: one buy, cleared and NOT claimed
-    await createOrder(controller, collateral1, 1000, true, true, false)
-
-    // BATCH 5: one buy, NOT cleared and NOT claimed
-    await createOrder(controller, collateral1, 1000, true, false, false)
+    // await createOrder(controller, collateral1, 1000, true, false)
 
     console.log('DAO deployed at ' + dao)
 
