@@ -1,21 +1,42 @@
 const sha3 = require('js-sha3').keccak_256
 const coder = require('web3/lib/solidity/coder.js')
 const blockNumber = require('@aragon/test-helpers/blockNumber')(web3)
-
+const AllEvents = require('web3/lib/web3/allevents')
 
 const FundraisingKit = artifacts.require('FundraisingKit')
 const TokenMock = artifacts.require('TokenMock')
 const Controller = artifacts.require('AragonFundraisingController')
 const MarketMaker = artifacts.require('BatchedBancorMarketMaker')
 
-const getBatchId = (tx, isBuy) => {
-  const event = isBuy ? 'NewBuyOrder(address,uint256,address,uint256,uint256)' : 'NewSellOrder(address,uint256,address,uint256)'
-  const events = tx.receipt.logs.filter(l => {
-    return l.topics[0] === '0x' + sha3(event)
-  })
-  const data = coder.decodeParams(['address', 'uint256'], events[0].data.replace('0x', ''))
-  return data[1]
+let marketMaker
+
+const decodeEventsForContract = (contract, receipt) => {
+  const ae = new AllEvents(contract._web3, contract.abi, contract.address)
+
+  // ae.decode mutates the args, so we deep copy
+  return JSON.parse(JSON.stringify(receipt))
+    .logs.filter(l => l.address === contract.address)
+    .map(l => ae.decode(l))
 }
+
+const getBatchId = (tx, isBuy) => {
+  const events = decodeEventsForContract(marketMaker, tx.receipt)
+  const eventName = isBuy ? 'NewBuyOrder' : 'NewSellOrder'
+  const event = events.filter(l => {
+    return l.event === eventName
+  })[0]
+
+  return event.args.batchId
+}
+
+// const getBatchId = (tx, isBuy) => {
+//   const event = isBuy ? 'NewBuyOrder(address,uint256,address,uint256,uint256)' : 'NewSellOrder(address,uint256,address,uint256)'
+//   const events = tx.receipt.logs.filter(l => {
+//     return l.topics[0] === '0x' + sha3(event)
+//   })
+//   const data = coder.decodeParams(['address', 'uint256'], events[0].data.replace('0x', ''))
+//   return data[1]
+// }
 
 const createOrder = async (controller, collateral, amount, isBuy, isClaimed) => {
   const receipt = isBuy ? await controller.openBuyOrder(collateral.address, amount) : await controller.openSellOrder(collateral.address, amount)
@@ -24,6 +45,8 @@ const createOrder = async (controller, collateral, amount, isBuy, isClaimed) => 
     // batch size (batchBlocks) is 1 in the kits
     // increasing by one block should terminate the batch
     await increaseBlock()
+    await increaseBlock()
+
     if (isBuy) await controller.claimBuyOrder(batchId, collateral.address)
     else await controller.claimSellOrder(batchId, collateral.address)
   }
@@ -69,6 +92,8 @@ module.exports = async callback => {
       l => l.event === 'InstalledApp' && l.args.appId === '0xc2bb88ab974c474221f15f691ed9da38be2f5d37364180cec05403c656981bf0'
     )[0].args.appProxy
 
+    marketMaker = await MarketMaker.at(marketMakerAddress)
+
     console.log(controllerAddress)
     console.log(marketMakerAddress)
 
@@ -84,13 +109,13 @@ module.exports = async callback => {
     await createOrder(controller, collateral1, 1121, true, true)
 
     // BATCH 2: one sell, claimed
-    // await createOrder(controller, collateral1, 1000, false, true)
+    await createOrder(controller, collateral1, 1000, false, true)
 
     // BATCH 3: one buy, claimed (collateral2)
-    // await createOrder(controller, collateral2, 1000, true, true)
+    await createOrder(controller, collateral2, 1000, true, true)
 
     // BATCH 4: one buy, cleared and NOT claimed
-    // await createOrder(controller, collateral1, 1000, true, false)
+    await createOrder(controller, collateral1, 1000, true, false)
 
     console.log('DAO deployed at ' + dao)
 

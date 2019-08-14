@@ -256,8 +256,8 @@ contract FundraisingKit is APMNamehash, IsContract, KitBase {
         controller.initialize(marketMaker, pool, tap);
 
         // add collateral tokens
-        controller.addCollateralToken(_collateralToken1, 100, 100, 1 * 10**5, 3 * 10**18, 400 * 10**9, 0);
-        controller.addCollateralToken(_collateralToken2, 100, 100, 1 * 10**5, 3 * 10**18, 400 * 10**9, 0);
+        controller.addCollateralToken(_collateralToken1, 10 * 10**18, 10**18, 10**5, 10 * 10**18, 10**16, 0);
+        controller.addCollateralToken(_collateralToken2, 100 * 10**18,  10**18, 10**4, 10 * 10**18, 10**16, 0);
 
         // clean-up
         cleanupPermission(acl, voting, controller, controller.ADD_COLLATERAL_TOKEN_ROLE());
