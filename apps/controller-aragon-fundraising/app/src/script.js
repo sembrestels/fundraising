@@ -5,7 +5,7 @@ import { first } from 'rxjs/operators'
 import { tokenDataFallback, getTokenSymbol, getTokenName } from './lib/token-utils'
 import poolAbi from './abi/Pool.json'
 import tapAbi from './abi/Tap.json'
-import marketMakerAbi from './abi/BancorMarketMaker.json'
+import marketMakerAbi from './abi/BatchedBancorMarketMaker.json'
 import miniMeTokenAbi from './abi/MiniMeToken.json'
 import tokenDecimalsAbi from './abi/token-decimals.json'
 import tokenNameAbi from './abi/token-name.json'
@@ -85,10 +85,10 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
       const nextState = {
         ...state,
       }
-      // console.log('#########################')
-      // console.log(evt.event)
-      // console.log(evt)
-      // console.log('#########################')
+      console.log('#########################')
+      console.log(evt.event)
+      console.log(evt)
+      console.log('#########################')
       const { event, returnValues, blockNumber, transactionHash } = evt
       switch (event) {
         // handle account changes events
@@ -109,16 +109,16 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
           return updateCollateralToken(nextState, returnValues, settings)
         case 'RemoveCollateralToken':
           return removeCollateralToken(nextState, returnValues)
-        case 'AddTokenTap':
-          return addTokenTap(nextState, returnValues)
+        case 'AddTappedToken':
+          return addTappedToken(nextState, returnValues)
         case 'NewBuyOrder':
         case 'NewSellOrder':
           return newOrder(nextState, returnValues, blockNumber, transactionHash)
-        case 'ClearBatch':
-          return clearBatch(nextState, returnValues, settings)
         case 'ReturnBuy':
         case 'ReturnSell':
-          return returnEvent(nextState, returnValues)
+          return newReturn(nextState, returnValues)
+        case 'NewBatch':
+          return newBatch(nextState, returnValues)
         default:
           return nextState
       }
@@ -136,6 +136,7 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
  * @returns {Object} a merged state between the cached one and data coming from external contracts
  */
 const initState = settings => async cachedState => {
+  console.log('init')
   const newState = {
     ...cachedState,
     isSyncing: true,
@@ -159,12 +160,12 @@ const initState = settings => async cachedState => {
  * @returns {Object} the current store's state augmented with the smart contract data
  */
 const loadTapData = async (state, settings) => {
-  const maxMonthlyTapIncreasePct = await settings.tap.contract.maxMonthlyTapIncreasePct().toPromise()
+  const maximumTapIncreasePct = await settings.tap.contract.maximumTapIncreasePct().toPromise()
   const pctBase = await settings.tap.contract.PCT_BASE().toPromise()
   return {
     ...state,
     beneficiary: await settings.tap.contract.beneficiary().toPromise(),
-    maxMonthlyTapIncrease: maxMonthlyTapIncreasePct / pctBase,
+    maximumTapIncreasePct: maximumTapIncreasePct / pctBase,
   }
 }
 
@@ -177,7 +178,7 @@ const loadTapData = async (state, settings) => {
 const loadPoolData = async (state, settings) => {
   return {
     ...state,
-    collateralTokensLength: await settings.pool.contract.collateralTokensLength().toPromise(),
+    // collateralTokensLength: await settings.pool.contract.collateralTokensLength().toPromise(),
   }
 }
 
@@ -222,27 +223,21 @@ const updateConnectedAccount = (state, { account }) => {
   }
 }
 
-const addCollateralToken = async (state, { collateralToken, virtualSupply, virtualBalance, reserveRatio }, settings) => {
-  // TODO: check MM and Pool collateralTokens are the same
-  // if collateralToken is defined, it means it's an event coming from the market maker contract
-  // else it's coming from the pool contract, and token is defined
-
-  // only handle market maker events
-  if (!collateralToken) return state
+const addCollateralToken = async (state, { collateral, reserveRatio, slippage, virtualBalance, virtualSupply }, settings) => {
   const collateralTokens = state.collateralTokens || new Map()
 
   // find the corresponding contract in the in memory map or get the external
-  const tokenContract = tokenContracts.has(collateralToken) ? tokenContracts.get(collateralToken) : app.external(collateralToken, tokenAbi)
-  tokenContracts.set(collateralToken, tokenContract)
+  const tokenContract = tokenContracts.has(collateral) ? tokenContracts.get(collateral) : app.external(collateral, tokenAbi)
+  tokenContracts.set(collateral, tokenContract)
 
   // loads data related to the collateral token
   const [balance, decimals, name, symbol] = await Promise.all([
-    loadTokenBalance(collateralToken, settings),
-    loadTokenDecimals(tokenContract, collateralToken, settings),
-    loadTokenName(tokenContract, collateralToken, settings),
-    loadTokenSymbol(tokenContract, collateralToken, settings),
+    loadTokenBalance(collateral, settings),
+    loadTokenDecimals(tokenContract, collateral, settings),
+    loadTokenName(tokenContract, collateral, settings),
+    loadTokenSymbol(tokenContract, collateral, settings),
   ])
-  collateralTokens.set(collateralToken, {
+  collateralTokens.set(collateral, {
     balance,
     decimals,
     name,
@@ -250,6 +245,7 @@ const addCollateralToken = async (state, { collateralToken, virtualSupply, virtu
     virtualSupply,
     virtualBalance,
     reserveRatio,
+    slippage,
   })
 
   return {
@@ -258,33 +254,33 @@ const addCollateralToken = async (state, { collateralToken, virtualSupply, virtu
   }
 }
 
-const updateCollateralToken = (state, { collateralToken, virtualSupply, virtualBalance, reserveRatio }, settings) => {
-  if (!collateralToken) return state
-  if (state.collateralTokens.has(collateralToken)) {
+const updateCollateralToken = (state, { collateral, reserveRatio, slippage, virtualBalance, virtualSupply }, settings) => {
+  if (state.collateralTokens.has(collateral)) {
     // update the collateral token
-    state.collateralTokens.set(collateralToken, {
-      ...state.collateralTokens.get(collateralToken),
+    state.collateralTokens.set(collateral, {
+      ...state.collateralTokens.get(collateral),
       virtualSupply,
       virtualBalance,
       reserveRatio,
+      slippage,
     })
   } else console.error('Collateral not found!')
   return state
 }
 
-const removeCollateralToken = (state, { token }) => {
+const removeCollateralToken = (state, { collateral }) => {
   // find the corresponding contract in the in memory map or get the external
-  const tokenContract = tokenContracts.has(token) ? tokenContracts.get(token) : app.external(token, tokenAbi)
+  const tokenContract = tokenContracts.has(collateral) ? tokenContracts.get(collateral) : app.external(collateral, tokenAbi)
   // remove all data related to this token
-  tokenContracts.delete(token)
+  tokenContracts.delete(collateral)
   tokenDecimals.delete(tokenContract)
   tokenNames.delete(tokenContract)
   tokenSymbols.delete(tokenContract)
-  state.collateralTokens.delete(token)
+  state.collateralTokens.delete(collateral)
   return state
 }
 
-const addTokenTap = (state, { token, tap }) => {
+const addTappedToken = (state, { token, tap }) => {
   const taps = state.taps || new Map()
   taps.set(token, parseInt(tap, 10))
   return {
@@ -294,12 +290,12 @@ const addTokenTap = (state, { token, tap }) => {
 }
 
 // TODO: amount or value? standardize it between buy and sell events?
-const newOrder = async (state, { buyer, seller, collateralToken, batchId, value, amount }, blockNumber, transactionHash) => {
+const newOrder = async (state, { buyer, seller, collateral, batchId, value, amount }, blockNumber, transactionHash) => {
   const orders = state.orders || new Map()
   const timestamp = await loadTimestamp(blockNumber)
   orders.set(transactionHash, {
     address: buyer || seller,
-    collateralToken,
+    collateralToken: collateral,
     amount: value || amount,
     batchId,
     timestamp,
@@ -311,23 +307,11 @@ const newOrder = async (state, { buyer, seller, collateralToken, batchId, value,
   }
 }
 
-const clearBatch = async (state, { batchId, collateralToken }, settings) => {
-  const clearedBatches = state.clearedBatches || []
-  const totalSupply = await settings.bondedToken.contract.totalSupply().toPromise()
-  const balance = await settings.pool.contract.balance(collateralToken).toPromise()
-  const pricePPM = await settings.marketMaker.contract.getPricePPM(collateralToken, totalSupply, balance).toPromise()
-  clearedBatches.push({ batchId, collateralToken, pricePPM })
-  return {
-    ...state,
-    clearedBatches,
-  }
-}
-
-const returnEvent = (state, { buyer, seller, collateralToken, batchId, value, amount }) => {
+const newReturn = (state, { buyer, seller, collateral, batchId, value, amount }) => {
   const returns = state.returns || []
   returns.push({
     address: buyer || seller,
-    collateralToken,
+    collateralToken: collateral,
     amount: value || amount,
     batchId,
     type: buyer ? Order.Type.BUY : Order.Type.SELL,
@@ -335,6 +319,14 @@ const returnEvent = (state, { buyer, seller, collateralToken, batchId, value, am
   return {
     ...state,
     returns,
+  }
+}
+
+const newBatch = (state, { id, collateral, supply, balance, reserveRatio }) => {
+  const currentBatch = { id, collateral, supply, balance, reserveRatio }
+  return {
+    ...state,
+    currentBatch,
   }
 }
 

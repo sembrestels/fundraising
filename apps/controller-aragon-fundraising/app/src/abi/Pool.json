@@ -1,6 +1,20 @@
 [
   {
     "constant": true,
+    "inputs": [],
+    "name": "ADD_PROTECTED_TOKEN_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
     "inputs": [
       {
         "name": "interfaceId",
@@ -63,25 +77,6 @@
       {
         "name": "",
         "type": "bytes4"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "collateralTokens",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
       }
     ],
     "payable": false,
@@ -201,6 +196,20 @@
     "type": "function"
   },
   {
+    "constant": true,
+    "inputs": [],
+    "name": "REMOVE_PROTECTED_TOKEN_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "constant": false,
     "inputs": [
       {
@@ -276,20 +285,6 @@
   },
   {
     "constant": true,
-    "inputs": [],
-    "name": "ADD_COLLATERAL_TOKEN_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
     "inputs": [
       {
         "name": "",
@@ -328,6 +323,25 @@
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "protectedTokens",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -444,11 +458,11 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "ADD_PRESIGNED_HASH_ROLE",
+    "name": "PROTECTED_TOKENS_CAP",
     "outputs": [
       {
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -458,11 +472,11 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "collateralTokensLength",
+    "name": "ADD_PRESIGNED_HASH_ROLE",
     "outputs": [
       {
         "name": "",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -508,20 +522,6 @@
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "REMOVE_COLLATERAL_TOKEN_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -680,7 +680,7 @@
         "type": "address"
       }
     ],
-    "name": "AddCollateralToken",
+    "name": "AddProtectedToken",
     "type": "event"
   },
   {
@@ -692,7 +692,7 @@
         "type": "address"
       }
     ],
-    "name": "RemoveCollateralToken",
+    "name": "RemoveProtectedToken",
     "type": "event"
   },
   {
@@ -880,7 +880,7 @@
         "type": "address"
       }
     ],
-    "name": "addCollateralToken",
+    "name": "addProtectedToken",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -894,7 +894,7 @@
         "type": "address"
       }
     ],
-    "name": "removeCollateralToken",
+    "name": "removeProtectedToken",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -908,7 +908,26 @@
         "type": "address"
       }
     ],
-    "name": "collateralTokenIndex",
+    "name": "tokenIsProtected",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "protectedTokenIndex",
     "outputs": [
       {
         "name": "",

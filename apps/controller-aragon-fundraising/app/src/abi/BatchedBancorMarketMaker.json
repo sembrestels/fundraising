@@ -29,17 +29,35 @@
   },
   {
     "constant": true,
+    "inputs": [],
+    "name": "UPDATE_FORMULA_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
     "inputs": [
       {
         "name": "",
         "type": "uint256"
       }
     ],
-    "name": "collateralTokens",
+    "name": "metaBatches",
     "outputs": [
       {
-        "name": "",
-        "type": "address"
+        "name": "initialized",
+        "type": "bool"
+      },
+      {
+        "name": "realSupply",
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -73,6 +91,20 @@
       {
         "name": "",
         "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "OPEN_BUY_ORDER_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -137,6 +169,25 @@
   },
   {
     "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "collateralsToBeClaimed",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
     "inputs": [],
     "name": "formula",
     "outputs": [
@@ -171,34 +222,6 @@
       {
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "CREATE_SELL_ORDER_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "waitingClear",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256"
       }
     ],
     "payable": false,
@@ -268,29 +291,12 @@
   },
   {
     "constant": true,
-    "inputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "collateralTokenInfo",
+    "inputs": [],
+    "name": "tokensToBeMinted",
     "outputs": [
       {
-        "name": "exists",
-        "type": "bool"
-      },
-      {
-        "name": "virtualSupply",
+        "name": "",
         "type": "uint256"
-      },
-      {
-        "name": "virtualBalance",
-        "type": "uint256"
-      },
-      {
-        "name": "reserveRatio",
-        "type": "uint32"
       }
     ],
     "payable": false,
@@ -355,11 +361,11 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "collateralTokensLength",
+    "name": "REMOVE_COLLATERAL_TOKEN_ROLE",
     "outputs": [
       {
         "name": "",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -397,6 +403,20 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "OPEN_SELL_ORDER_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "kernel",
     "outputs": [
       {
@@ -416,6 +436,41 @@
       {
         "name": "",
         "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "collaterals",
+    "outputs": [
+      {
+        "name": "whitelisted",
+        "type": "bool"
+      },
+      {
+        "name": "virtualSupply",
+        "type": "uint256"
+      },
+      {
+        "name": "virtualBalance",
+        "type": "uint256"
+      },
+      {
+        "name": "reserveRatio",
+        "type": "uint32"
+      },
+      {
+        "name": "slippage",
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -453,20 +508,6 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "CREATE_BUY_ORDER_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
     "name": "token",
     "outputs": [
       {
@@ -485,7 +526,7 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint64"
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -497,7 +538,7 @@
     "inputs": [
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "collateral",
         "type": "address"
       },
       {
@@ -514,6 +555,11 @@
         "indexed": false,
         "name": "reserveRatio",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "name": "slippage",
+        "type": "uint256"
       }
     ],
     "name": "AddCollateralToken",
@@ -524,7 +570,19 @@
     "inputs": [
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "collateral",
+        "type": "address"
+      }
+    ],
+    "name": "RemoveCollateralToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "collateral",
         "type": "address"
       },
       {
@@ -541,6 +599,11 @@
         "indexed": false,
         "name": "reserveRatio",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "name": "slippage",
+        "type": "uint256"
       }
     ],
     "name": "UpdateCollateralToken",
@@ -550,12 +613,24 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "name": "beneficiary",
         "type": "address"
       }
     ],
     "name": "UpdateBeneficiary",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "formula",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateFormula",
     "type": "event"
   },
   {
@@ -580,22 +655,93 @@
     "inputs": [
       {
         "indexed": true,
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "supply",
+        "type": "uint256"
+      }
+    ],
+    "name": "NewMetaBatch",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "supply",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "reserveRatio",
+        "type": "uint32"
+      }
+    ],
+    "name": "NewBatch",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
+        "type": "address"
+      }
+    ],
+    "name": "CancelBatch",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "name": "buyer",
         "type": "address"
       },
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
         "type": "address"
       },
       {
         "indexed": false,
-        "name": "value",
+        "name": "fee",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "name": "batchId",
+        "name": "value",
         "type": "uint256"
       }
     ],
@@ -612,38 +758,21 @@
       },
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
         "type": "address"
       },
       {
         "indexed": false,
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "name": "batchId",
-        "type": "uint256"
       }
     ],
     "name": "NewSellOrder",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "name": "collateralToken",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "name": "batchId",
-        "type": "uint256"
-      }
-    ],
-    "name": "ClearBatch",
     "type": "event"
   },
   {
@@ -656,21 +785,21 @@
       },
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
         "type": "address"
       },
       {
         "indexed": false,
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "name": "batchId",
-        "type": "uint256"
       }
     ],
-    "name": "ReturnBuy",
+    "name": "ReturnBuyOrder",
     "type": "event"
   },
   {
@@ -683,21 +812,117 @@
       },
       {
         "indexed": true,
-        "name": "collateralToken",
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "ReturnSellOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
         "type": "address"
       },
       {
         "indexed": false,
         "name": "value",
         "type": "uint256"
+      }
+    ],
+    "name": "ReturnCancelledBuyOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "collateral",
+        "type": "address"
       },
       {
         "indexed": false,
-        "name": "batchId",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "ReturnSell",
+    "name": "ReturnCancelledSellOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_batchId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "totalBuySpend",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "totalBuyReturn",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "totalSellSpend",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "totalSellReturn",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdatePricing",
     "type": "event"
   },
   {
@@ -795,7 +1020,7 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_collateralToken",
+        "name": "_collateral",
         "type": "address"
       },
       {
@@ -809,6 +1034,10 @@
       {
         "name": "_reserveRatio",
         "type": "uint32"
+      },
+      {
+        "name": "_slippage",
+        "type": "uint256"
       }
     ],
     "name": "addCollateralToken",
@@ -821,7 +1050,21 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_collateralToken",
+        "name": "_collateral",
+        "type": "address"
+      }
+    ],
+    "name": "removeCollateralToken",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_collateral",
         "type": "address"
       },
       {
@@ -835,6 +1078,10 @@
       {
         "name": "_reserveRatio",
         "type": "uint32"
+      },
+      {
+        "name": "_slippage",
+        "type": "uint256"
       }
     ],
     "name": "updateCollateralToken",
@@ -852,6 +1099,20 @@
       }
     ],
     "name": "updateBeneficiary",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_formula",
+        "type": "address"
+      }
+    ],
+    "name": "updateFormula",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -883,7 +1144,7 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
+        "name": "_collateral",
         "type": "address"
       },
       {
@@ -891,7 +1152,7 @@
         "type": "uint256"
       }
     ],
-    "name": "createBuyOrder",
+    "name": "openBuyOrder",
     "outputs": [],
     "payable": true,
     "stateMutability": "payable",
@@ -905,7 +1166,7 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
+        "name": "_collateral",
         "type": "address"
       },
       {
@@ -913,16 +1174,7 @@
         "type": "uint256"
       }
     ],
-    "name": "createSellOrder",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [],
-    "name": "clearBatches",
+    "name": "openSellOrder",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -936,15 +1188,15 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
         "name": "_batchId",
         "type": "uint256"
+      },
+      {
+        "name": "_collateral",
+        "type": "address"
       }
     ],
-    "name": "claimBuy",
+    "name": "claimBuyOrder",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -958,15 +1210,15 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
         "name": "_batchId",
         "type": "uint256"
+      },
+      {
+        "name": "_collateral",
+        "type": "address"
       }
     ],
-    "name": "claimSell",
+    "name": "claimSellOrder",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -980,15 +1232,15 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
         "name": "_batchId",
         "type": "uint256"
+      },
+      {
+        "name": "_collateral",
+        "type": "address"
       }
     ],
-    "name": "clearBatchesAndClaimBuy",
+    "name": "claimCancelledBuyOrder",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -1002,15 +1254,15 @@
         "type": "address"
       },
       {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
         "name": "_batchId",
         "type": "uint256"
+      },
+      {
+        "name": "_collateral",
+        "type": "address"
       }
     ],
-    "name": "clearBatchesAndClaimSell",
+    "name": "claimCancelledSellOrder",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -1034,12 +1286,12 @@
     "constant": true,
     "inputs": [
       {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
         "name": "_batchId",
         "type": "uint256"
+      },
+      {
+        "name": "_collateral",
+        "type": "address"
       }
     ],
     "name": "getBatch",
@@ -1062,6 +1314,10 @@
       },
       {
         "name": "",
+        "type": "uint32"
+      },
+      {
+        "name": "",
         "type": "uint256"
       },
       {
@@ -1085,11 +1341,11 @@
     "constant": true,
     "inputs": [
       {
-        "name": "_collateralToken",
+        "name": "_collateral",
         "type": "address"
       }
     ],
-    "name": "getCollateralTokenInfo",
+    "name": "getCollateralToken",
     "outputs": [
       {
         "name": "",
@@ -1106,92 +1362,7 @@
       {
         "name": "",
         "type": "uint32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "_collateralToken",
-        "type": "address"
       },
-      {
-        "name": "_totalSupply",
-        "type": "uint256"
-      },
-      {
-        "name": "_poolBalance",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPricePPM",
-    "outputs": [
-      {
-        "name": "price",
-        "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
-        "name": "_totalSupply",
-        "type": "uint256"
-      },
-      {
-        "name": "_poolBalance",
-        "type": "uint256"
-      },
-      {
-        "name": "_buyValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "getBuy",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "_collateralToken",
-        "type": "address"
-      },
-      {
-        "name": "_totalSupply",
-        "type": "uint256"
-      },
-      {
-        "name": "_poolBalance",
-        "type": "uint256"
-      },
-      {
-        "name": "_sellAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "getSell",
-    "outputs": [
       {
         "name": "",
         "type": "uint256"

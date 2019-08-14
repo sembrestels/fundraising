@@ -16,11 +16,11 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "maxMonthlyTapIncreasePct",
+    "name": "UPDATE_CONTROLLER_ROLE",
     "outputs": [
       {
         "name": "",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -40,6 +40,20 @@
       {
         "name": "",
         "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "UPDATE_MAXIMUM_TAP_INCREASE_PCT_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -90,20 +104,6 @@
   },
   {
     "constant": true,
-    "inputs": [],
-    "name": "REMOVE_TOKEN_TAP_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
     "inputs": [
       {
         "name": "",
@@ -115,6 +115,20 @@
       {
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "ADD_TAPPED_TOKEN_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -162,20 +176,6 @@
       {
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "ADD_TOKEN_TAP_ROLE",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -273,7 +273,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "UPDATE_TOKEN_TAP_ROLE",
+    "name": "UPDATE_TAPPED_TOKEN_ROLE",
     "outputs": [
       {
         "name": "",
@@ -287,11 +287,30 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "UPDATE_MONTHLY_TAP_INCREASE_ROLE",
+    "name": "batchBlocks",
     "outputs": [
       {
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "floors",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -306,6 +325,20 @@
       {
         "name": "",
         "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "REMOVE_TAPPED_TOKEN_ROLE",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "payable": false,
@@ -376,11 +409,39 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "maximumTapIncreasePct",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "controller",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "PCT_BASE",
     "outputs": [
       {
         "name": "",
-        "type": "uint64"
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -391,7 +452,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
+        "name": "controller",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateController",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "name": "reserve",
         "type": "address"
       }
@@ -403,7 +476,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "name": "beneficiary",
         "type": "address"
       }
@@ -416,11 +489,11 @@
     "inputs": [
       {
         "indexed": false,
-        "name": "maxMonthlyTapIncreasePct",
+        "name": "maximumTapIncreasePct",
         "type": "uint256"
       }
     ],
-    "name": "UpdateMaxMonthlyTapIncreasePct",
+    "name": "UpdateMaximumTapIncreasePct",
     "type": "event"
   },
   {
@@ -435,9 +508,14 @@
         "indexed": false,
         "name": "tap",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "floor",
+        "type": "uint256"
       }
     ],
-    "name": "AddTokenTap",
+    "name": "AddTappedToken",
     "type": "event"
   },
   {
@@ -449,7 +527,7 @@
         "type": "address"
       }
     ],
-    "name": "RemoveTokenTap",
+    "name": "RemoveTappedToken",
     "type": "event"
   },
   {
@@ -464,9 +542,14 @@
         "indexed": false,
         "name": "tap",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "floor",
+        "type": "uint256"
       }
     ],
-    "name": "UpdateTokenTap",
+    "name": "UpdateTappedToken",
     "type": "event"
   },
   {
@@ -539,6 +622,10 @@
     "constant": false,
     "inputs": [
       {
+        "name": "_controller",
+        "type": "address"
+      },
+      {
         "name": "_reserve",
         "type": "address"
       },
@@ -547,11 +634,29 @@
         "type": "address"
       },
       {
-        "name": "_maxMonthlyTapIncreasePct",
+        "name": "_batchBlocks",
+        "type": "uint256"
+      },
+      {
+        "name": "_maximumTapIncreasePct",
         "type": "uint256"
       }
     ],
     "name": "initialize",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_controller",
+        "type": "address"
+      }
+    ],
+    "name": "updateController",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -589,11 +694,11 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_maxMonthlyTapIncreasePct",
+        "name": "_maximumTapIncreasePct",
         "type": "uint256"
       }
     ],
-    "name": "updateMaxMonthlyTapIncreasePct",
+    "name": "updateMaximumTapIncreasePct",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -609,9 +714,13 @@
       {
         "name": "_tap",
         "type": "uint256"
+      },
+      {
+        "name": "_floor",
+        "type": "uint256"
       }
     ],
-    "name": "addTokenTap",
+    "name": "addTappedToken",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -625,7 +734,7 @@
         "type": "address"
       }
     ],
-    "name": "removeTokenTap",
+    "name": "removeTappedToken",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -641,9 +750,13 @@
       {
         "name": "_tap",
         "type": "uint256"
+      },
+      {
+        "name": "_floor",
+        "type": "uint256"
       }
     ],
-    "name": "updateTokenTap",
+    "name": "updateTappedToken",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -665,36 +778,8 @@
   },
   {
     "constant": true,
-    "inputs": [
-      {
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "name": "_tap",
-        "type": "uint256"
-      }
-    ],
-    "name": "isMonthlyTapIncreaseValid",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "_token",
-        "type": "address"
-      }
-    ],
-    "name": "getMaxWithdrawal",
+    "inputs": [],
+    "name": "getCurrentBatchId",
     "outputs": [
       {
         "name": "",
@@ -713,7 +798,7 @@
         "type": "address"
       }
     ],
-    "name": "balanceOfReserve",
+    "name": "getMaximumWithdrawal",
     "outputs": [
       {
         "name": "",

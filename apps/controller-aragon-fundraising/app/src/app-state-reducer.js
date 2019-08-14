@@ -1,7 +1,7 @@
 import { Order } from './constants'
 
 /**
- * Checks whether if we have enough data to start the fundraising app
+ * Checks whether we have enough data to start the fundraising app
  * @param {Object} state - the background script state
  * @returns {boolean} true if ready, false otherwise
  */
@@ -84,7 +84,7 @@ const appStateReducer = state => {
       ppm,
       taps,
       collateralTokens,
-      maxMonthlyTapIncrease,
+      maximumTapIncreasePct,
       // orders
       orders,
       clearedBatches,
@@ -112,7 +112,7 @@ const appStateReducer = state => {
     // reserve tab data
     const reserve = {
       tap: taps.get(daiAddress),
-      maxMonthlyTapIncrease,
+      maximumTapIncreasePct,
       collateralTokens: Array.from(collateralTokens).map(([_, { symbol, reserveRatio }], i) => ({
         symbol,
         ratio: parseInt(reserveRatio, 10) / parseInt(ppm, 10),
