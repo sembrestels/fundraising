@@ -31,7 +31,7 @@ const styles = {
     paddingLeft: '14px',
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: '#1DD9D5',
+    color: '#08BEE5',
   },
   daiPrice: {
     position: 'relative',

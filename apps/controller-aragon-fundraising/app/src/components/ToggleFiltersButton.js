@@ -15,7 +15,7 @@ const Button = styled.div`
   float: right;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(223, 227, 232, 0.75);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0.5rem 1rem;
   padding-left: 0.5rem;
   &:hover {
