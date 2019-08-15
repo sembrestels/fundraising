@@ -263,19 +263,17 @@ const StyledTextInput = styled(TextInput)`
   box-shadow: none;
   width: 100%;
 `
-const StyledDropdown = styled.div`
-  > div {
-    box-shadow: none;
-  }
 
-  > div > div:first-child {
-    padding-right: 26px;
+const StyledDropdown = styled.div`
+  button {
+    box-shadow: none;
     border-radius: 0 3px 3px 0;
     border: 1px solid #dde4e9;
     border-left: none;
     height: 40px;
   }
 `
+
 const Form = styled.form`
   display: block;
 `
