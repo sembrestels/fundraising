@@ -160,14 +160,7 @@ export default class NewOrderSidePanel extends React.Component {
       <SidePanel title="Buy Presale Tokens" opened={opened} onClose={onClose}>
         <div css="margin: 0 -30px 30px; border: 1px solid #DFE3E8;" />
         <Form onSubmit={e => this.handleSubmit(e, isBuyOrder)}>
-          <div
-            css={`
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 3rem;
-            `}
-          >
+          <div className="fields">
             <div>
               <p
                 css={`
@@ -183,32 +176,26 @@ export default class NewOrderSidePanel extends React.Component {
                 css={`
                   display: flex;
                   align-items: center;
+                  > div {
+                    width: 100%;
+                  }
                 `}
               >
                 <StyledTextInput
-                  adornment={<a style={styles.maxBalanceLink}>MAX</a>}
+                  adornment={<span css="padding-right: 14px;">DAI</span>}
+                  adornmentPosition={'end'}
                   type="number"
-                  style={styles.selectionInputLeft}
+                  style={styles.selectionInputRight}
                   ref={amount => (this.amountInput = amount)}
                   value={amount}
                   onChange={() => {}}
                   wide
                   required
                 />
-                <StyledDropdown>
-                  <DropDown items={collateralTokens} selected={activeItem} onChange={this.handleTokenChange} />
-                </StyledDropdown>
               </div>
             </div>
 
-            <img
-              src={transferArrows}
-              css={`
-                height: 16px;
-                margin: 0 0.5rem;
-                margin-top: 1rem;
-              `}
-            />
+            <img src={transferArrows} className="arrows" />
 
             <div
               css={`
@@ -261,15 +248,30 @@ const StyledTextInput = styled(TextInput)`
   box-shadow: none;
   width: 100%;
 `
-const StyledDropdown = styled.div`
-  button {
-    box-shadow: none;
-    border-radius: 0 3px 3px 0;
-    border: 1px solid #dde4e9;
-    border-left: none;
-    height: 40px;
-  }
-`
+
 const Form = styled.form`
   display: block;
+
+  .fields {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+  }
+
+  .arrows {
+    height: 16px;
+    margin: 0 0.5rem;
+    margin-top: 1rem;
+  }
+
+  @media only screen and (max-width: 424px) {
+    .fields {
+      flex-direction: column;
+    }
+
+    .arrows {
+      margin-bottom: 0.75rem;
+    }
+  }
 `

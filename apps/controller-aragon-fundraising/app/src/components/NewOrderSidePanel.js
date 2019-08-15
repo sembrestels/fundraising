@@ -162,14 +162,7 @@ export default class NewOrderSidePanel extends React.Component {
           <TabBar items={['Buy', 'Sell']} selected={activeTab} onChange={idx => this.setState({ activeTab: idx })} />
         </TabBarWrapper>
         <Form onSubmit={e => this.handleSubmit(e, isBuyOrder)}>
-          <div
-            css={`
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 3rem;
-            `}
-          >
+          <div className="fields">
             <div>
               <p
                 css={`
@@ -198,19 +191,12 @@ export default class NewOrderSidePanel extends React.Component {
                   required
                 />
                 <StyledDropdown>
-                  <DropDown items={collateralTokens} active={activeItem} onChange={this.handleTokenChange} />
+                  <DropDown items={collateralTokens} selected={activeItem} onChange={this.handleTokenChange} />
                 </StyledDropdown>
               </div>
             </div>
 
-            <img
-              src={transferArrows}
-              css={`
-                height: 16px;
-                margin: 0 0.5rem;
-                margin-top: 1rem;
-              `}
-            />
+            <img src={transferArrows} className="arrows" />
 
             <div
               css={`
@@ -276,6 +262,29 @@ const StyledDropdown = styled.div`
 
 const Form = styled.form`
   display: block;
+
+  .fields {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+  }
+
+  .arrows {
+    height: 16px;
+    margin: 0 0.5rem;
+    margin-top: 1rem;
+  }
+
+  @media only screen and (max-width: 424px) {
+    .fields {
+      flex-direction: column;
+    }
+
+    .arrows {
+      margin-bottom: 0.75rem;
+    }
+  }
 `
 
 const TabBarWrapper = styled.div`
