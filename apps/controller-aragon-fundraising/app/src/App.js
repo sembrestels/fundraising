@@ -7,6 +7,7 @@ import NewOrderSidePanel from './components/NewOrderSidePanel'
 import PresaleSidePanel from './components/PresaleSidePanel'
 import Reserves from './screens/Reserves'
 import Orders from './screens/Orders'
+import MyOrders from './screens/MyOrders'
 import Overview from './screens/Overview'
 import PresaleView from './screens/Presale'
 import { AppLogicProvider, useAppLogic } from './app-logic'
@@ -47,7 +48,7 @@ const Presale = () => {
   )
 }
 
-const tabs = ['Overview', 'Orders', 'Reserve Settings']
+const tabs = ['Overview', 'Orders', 'My Orders', 'Reserve Settings']
 
 const App = () => {
   const { isSyncing, ui, common, overview, ordersView, reserve } = useAppLogic()
@@ -102,7 +103,8 @@ const App = () => {
               <Tabs selected={tabIndex.current} onChange={tabIndex.set} items={tabs} />
               {tabIndex.current === 0 && <Overview bondedToken={common.bondedToken} overview={overview} polledTotalSupply={polledTotalSupply} />}
               {tabIndex.current === 1 && <Orders orders={ordersView} />}
-              {tabIndex.current === 2 && (
+              {tabIndex.current === 2 && <MyOrders orders={ordersView} />}
+              {tabIndex.current === 3 && (
                 <Reserves bondedToken={common.bondedToken} reserve={reserve} polledTotalSupply={polledTotalSupply} updateTokenTap={handleTokenTapUpdate} />
               )}
             </Layout>
