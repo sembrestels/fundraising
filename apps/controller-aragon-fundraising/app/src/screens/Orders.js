@@ -11,7 +11,7 @@ import {
   ContextMenu,
   ContextMenuItem,
   IconCheck,
-  IconCross,
+  IconClock,
   IconEllipsis,
   shortenAddress,
 } from '@aragon/ui'
@@ -21,6 +21,7 @@ import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
 import ToggleFiltersButton from '../components/ToggleFiltersButton'
 import { Order } from '../constants'
+import { round } from '../lib/math-utils'
 
 const multiplyArray = (base, times) => {
   return [...Array(times)].reduce(v => [...v, ...base], [])
@@ -79,8 +80,8 @@ const filter = (orders, state) => {
 const getIconState = state => {
   if (state === Order.State.RETURNED) {
     return <IconCheck size="small" color="#2CC68F" />
-  } else if (state === Order.State.CLEARED) {
-    return <IconCross size="small" color="#FB7777" />
+  } else if (state === Order.State.OVER) {
+    return <IconClock size="small" color="#08BEE5" />
   } else if (state === Order.State.PENDING) {
     return <IconEllipsis size="small" color="#6D777B" />
   }
@@ -167,10 +168,10 @@ export default ({ orders }) => {
             </div>,
             <p css={data.type === Order.Type.BUY ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
               {data.type === Order.Type.BUY ? '+' : '-'}
-              {data.amount + '  '}
-              {data.collateral}
+              {round(data.amount, 3) + ' '}
+              {data.symbol}
             </p>,
-            <p css="font-weight: 600;">${data.price}</p>,
+            <p css="font-weight: 600;">${round(data.price, 3)}</p>,
             data.type === Order.Type.BUY ? (
               <div
                 css={`
@@ -202,12 +203,12 @@ export default ({ orders }) => {
                 {data.type}
               </div>
             ),
-            <p css="font-weight: 600;">{data.tokens}</p>,
+            <p css="font-weight: 600;">{round(data.tokens, 3)}</p>,
           ]
         }}
         renderEntryActions={data => (
           <ContextMenu>
-            <SafeLink href={'https://etherscan.io/tx/' + data.txHash} target="_blank">
+            <SafeLink href={'https://etherscan.io/tx/' + data.transactionHash} target="_blank">
               <ContextMenuItem>View Tx on Etherscan</ContextMenuItem>
             </SafeLink>
           </ContextMenu>

@@ -1,18 +1,16 @@
-import React, { useRef, useState } from 'react'
-import { Badge, Box, Button, Text, TextInput, DiscButton } from '@aragon/ui'
+import React, { useState } from 'react'
+import { Badge, Box, Button, DiscButton, Text, TextInput, SidePanel } from '@aragon/ui'
 import styled from 'styled-components'
 import EditIcon from '../assets/EditIcon.svg'
 import HoverNotification from '../components/HoverNotification/HoverNotification'
+
+// TODO: handle edit monthly alocation validation
 
 // In this copy we should display the user the percentage of max increase of the tap
 const hoverTextNotifications = [
   'This will update the monthly allocation (tap rate) i.e. how much funds can be released within the bonding curve contract per 30-day period. Note: this value must be less than the max increase limit set inside the contract.',
   "You're essentially bonding collateral when buying tokens (increasing the supply), and burning collateral when selling tokens (decreasing the supply). These relationships are defined by the smart contract.",
 ]
-
-const StyledTextInput = styled(TextInput)`
-  width: 100%;
-`
 
 const buttonStyle = `
   border: 1px solid rgba(223, 227, 232, 0.75);
@@ -105,19 +103,22 @@ const ContentWrapper = styled.div`
   }
 `
 
-export default ({ bondedToken, reserve, polledTotalSupply, updateTokenTap }) => {
-  const { tap, collateralTokens } = reserve
-  const [monthlyAllocation, setMonthlyAllocation] = useState(tap)
-
-  const inputRef = useRef(monthlyAllocation)
+export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updateTappedToken }) => {
+  const {
+    tap: { allocation },
+    maximumTapIncreasePct,
+    collateralTokens,
+  } = reserve
+  const [monthlyAllocation, setMonthlyAllocation] = useState(allocation)
+  const [opened, setOpened] = useState(false)
 
   const handleMonthlyChange = event => {
-    setMonthlyAllocation(event.target.value)
+    setMonthlyAllocation(parseInt(event.target.value, 10))
   }
-  const onButtonClick = () => {
-    const updatedAllocation = inputRef.current.value
-    // call contract api to update if they have valid permissions
-    updateTokenTap(updatedAllocation)
+  const handleSubmit = event => {
+    event.preventDefault()
+    setOpened(false)
+    updateTappedToken(monthlyAllocation)
   }
 
   return (
@@ -128,20 +129,11 @@ export default ({ bondedToken, reserve, polledTotalSupply, updateTokenTap }) => 
           <div css="margin-right: 4rem;">
             <div css="display: flex; flex-direction: column; margin-bottom: 1rem;">
               {NotificationLabel('Monthly allocation', hoverTextNotifications[0])}
-              <StyledTextInput
-                ref={inputRef}
-                adornment={
-                  <Text as="p" style={{ paddingRight: '12px' }}>
-                    DAI
-                  </Text>
-                }
-                adornmentPosition={'end'}
-                value={monthlyAllocation}
-                onChange={handleMonthlyChange}
-                required
-              />
+              <Text as="p" style={{ paddingRight: '12px' }}>
+                {allocation} DAI
+              </Text>
             </div>
-            <Button type="submit" css={buttonStyle} onClick={onButtonClick}>
+            <Button css={buttonStyle} onClick={() => setOpened(true)}>
               <img style={{ marginTop: '6px' }} src={EditIcon} />
               <p
                 css={`
@@ -178,15 +170,43 @@ export default ({ bondedToken, reserve, polledTotalSupply, updateTokenTap }) => 
           </Badge>
         </div>
       </Box>
+      <SidePanel opened={opened} onClose={() => setOpened(false)} title="Monthly allocation">
+        <form onSubmit={handleSubmit}>
+          <Text as="p">You can increase the tap by {maximumTapIncreasePct * 100}%.</Text>
+          <Text as="p">Current monthly allocation: {allocation} DAI</Text>
+          <Wrapper>
+            <TextInput
+              adornment={
+                <Text as="p" style={{ paddingRight: '12px' }}>
+                  DAI
+                </Text>
+              }
+              adornmentPosition={'end'}
+              value={monthlyAllocation}
+              onChange={handleMonthlyChange}
+              required
+            />
+          </Wrapper>
+          <Wrapper>
+            <Button mode="strong" type="submit" wide>
+              Edit monthly allocation
+            </Button>
+          </Wrapper>
+        </form>
+      </SidePanel>
     </ContentWrapper>
   )
 }
+
+const Wrapper = styled.div`
+  padding-top: 10px;
+`
 
 const NotificationLabel = (label, hoverText) => (
   <Text css="margin-bottom: 0.5rem;">
     {label}
     <HoverNotification copy={hoverText}>
-      <DiscButton size="24" description="Help" css="margin-left: 1rem;">
+      <DiscButton size={24} description="Help" css="margin-left: 1rem;">
         <span
           css={`
             font-size: 12px;

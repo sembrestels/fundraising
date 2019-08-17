@@ -26,14 +26,15 @@ const getBatchId = (tx, isBuy) => {
   return event.args.batchId
 }
 
-const createOrder = async (collateral, amount, isBuy, isClaimed) => {
+const createOrder = async (collateral, amount, isBuy, isCleared, isClaimed) => {
   const tx = isBuy ? await controller.openBuyOrder(collateral.address, amount) : await controller.openSellOrder(collateral.address, amount)
+  if (isCleared) {
+    // batch size (batchBlocks) is 1 in the kits
+    // increasing by one block should clear the batch
+    await increaseBlock()
+  }
   if (isClaimed) {
     const batchId = getBatchId(tx, isBuy)
-    // batch size (batchBlocks) is 1 in the kits
-    // increasing by one block should terminate the batch
-    await increaseBlock()
-    await increaseBlock()
     if (isBuy) await controller.claimBuyOrder(batchId, collateral.address)
     else await controller.claimSellOrder(batchId, collateral.address)
   }
@@ -90,17 +91,20 @@ module.exports = async callback => {
 
     console.log('OK')
 
-    // BATCH 1: one buy, claimed
-    await createOrder(collateral1, 1121, true, true)
+    // BATCH 1: one buy, cleared and claimed
+    await createOrder(collateral1, 1121, true, true, true)
 
-    // BATCH 2: one sell, claimed
-    await createOrder(collateral1, 1000, false, true)
+    // BATCH 2: one sell, cleared and claimed
+    await createOrder(collateral1, 1000, false, true, true)
 
-    // BATCH 3: one buy, claimed (collateral2)
-    await createOrder(collateral2, 1000, true, true)
+    // BATCH 3: one buy, cleared and claimed (collateral2)
+    await createOrder(collateral2, 1000, true, true, true)
 
     // BATCH 4: one buy, cleared and NOT claimed
-    await createOrder(collateral1, 1000, true, false)
+    await createOrder(collateral1, 1000, true, true, false)
+
+    // BATCH 5: one buy, NOT cleared and NOT claimed
+    await createOrder(collateral1, 1000, true, false, false)
 
     console.log('DAO deployed at ' + dao)
 

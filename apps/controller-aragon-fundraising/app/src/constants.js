@@ -8,7 +8,7 @@ export const Order = {
   },
   State: {
     PENDING: 'PENDING',
-    CLEARED: 'CLEARED',
+    OVER: 'OVER',
     RETURNED: 'RETURNED',
   },
 }

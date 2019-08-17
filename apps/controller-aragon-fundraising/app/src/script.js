@@ -110,15 +110,18 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
         case 'RemoveCollateralToken':
           return removeCollateralToken(nextState, returnValues)
         case 'AddTappedToken':
-          return addTappedToken(nextState, returnValues)
+        case 'UpdateTappedToken':
+          return handleTappedToken(nextState, returnValues)
         case 'NewBuyOrder':
         case 'NewSellOrder':
           return newOrder(nextState, returnValues, blockNumber, transactionHash)
-        case 'ReturnBuy':
-        case 'ReturnSell':
+        case 'ReturnBuyOrder':
+        case 'ReturnSellOrder':
           return newReturn(nextState, returnValues)
         case 'NewBatch':
-          return newBatch(nextState, returnValues)
+          return newBatch(nextState, returnValues, blockNumber)
+        case 'UpdatePricing':
+          return updatePricing(nextState, returnValues)
         default:
           return nextState
       }
@@ -136,7 +139,6 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress) => {
  * @returns {Object} a merged state between the cached one and data coming from external contracts
  */
 const initState = settings => async cachedState => {
-  console.log('init')
   const newState = {
     ...cachedState,
     isSyncing: true,
@@ -198,7 +200,7 @@ const loadMarketMakerData = async (state, settings) => {
   ])
   return {
     ...state,
-    ppm: await settings.marketMaker.contract.PPM().toPromise(),
+    ppm: parseInt(await settings.marketMaker.contract.PPM().toPromise(), 10),
     bondedToken: {
       address: settings.bondedToken.address,
       totalSupply,
@@ -256,6 +258,7 @@ const addCollateralToken = async (state, { collateral, reserveRatio, slippage, v
 
 const updateCollateralToken = (state, { collateral, reserveRatio, slippage, virtualBalance, virtualSupply }, settings) => {
   if (state.collateralTokens.has(collateral)) {
+    // TODO: update balance ? why not using addCollateralToken (same as AddTappedToken and UpdateTappedToken)
     // update the collateral token
     state.collateralTokens.set(collateral, {
       ...state.collateralTokens.get(collateral),
@@ -280,9 +283,9 @@ const removeCollateralToken = (state, { collateral }) => {
   return state
 }
 
-const addTappedToken = (state, { token, tap }) => {
+const handleTappedToken = (state, { token, tap, floor }) => {
   const taps = state.taps || new Map()
-  taps.set(token, parseInt(tap, 10))
+  taps.set(token, { allocation: parseInt(tap, 10), floor })
   return {
     ...state,
     taps,
@@ -291,15 +294,16 @@ const addTappedToken = (state, { token, tap }) => {
 
 // TODO: amount or value? standardize it between buy and sell events?
 const newOrder = async (state, { buyer, seller, collateral, batchId, value, amount }, blockNumber, transactionHash) => {
-  const orders = state.orders || new Map()
+  const orders = state.orders || []
   const timestamp = await loadTimestamp(blockNumber)
-  orders.set(transactionHash, {
+  orders.push({
     address: buyer || seller,
-    collateralToken: collateral,
+    collateral,
     amount: value || amount,
-    batchId,
+    batchId: parseInt(batchId, 10),
     timestamp,
     type: buyer ? Order.Type.BUY : Order.Type.SELL,
+    transactionHash,
   })
   return {
     ...state,
@@ -311,9 +315,9 @@ const newReturn = (state, { buyer, seller, collateral, batchId, value, amount })
   const returns = state.returns || []
   returns.push({
     address: buyer || seller,
-    collateralToken: collateral,
+    collateral,
     amount: value || amount,
-    batchId,
+    batchId: parseInt(batchId, 10),
     type: buyer ? Order.Type.BUY : Order.Type.SELL,
   })
   return {
@@ -322,12 +326,34 @@ const newReturn = (state, { buyer, seller, collateral, batchId, value, amount })
   }
 }
 
-const newBatch = (state, { id, collateral, supply, balance, reserveRatio }) => {
-  const currentBatch = { id, collateral, supply, balance, reserveRatio }
+const newBatch = async (state, { id, collateral, supply, balance, reserveRatio }, blockNumber) => {
+  const batches = state.batches || []
+  const timestamp = await loadTimestamp(blockNumber)
+  const startPrice = (balance * state.ppm) / (supply * reserveRatio)
+  batches.push({
+    id: parseInt(id, 10),
+    collateral,
+    supply,
+    balance,
+    reserveRatio,
+    timestamp,
+    startPrice,
+  })
+  const currentBatch = parseInt(id, 10)
   return {
     ...state,
+    batches,
     currentBatch,
   }
+}
+
+const updatePricing = (state, { batchId, collateral, totalBuyReturn, totalBuySpend, totalSellReturn, totalSellSpend }) => {
+  const batch = state.batches.find(b => b.id === parseInt(batchId, 10) && b.collateral === collateral)
+  if (batch) {
+    batch.buyPrice = totalBuySpend / totalBuyReturn
+    batch.sellPrice = totalSellReturn / totalSellSpend
+  }
+  return state
 }
 
 /***********************
