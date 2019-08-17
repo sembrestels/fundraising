@@ -893,12 +893,12 @@
     "inputs": [
       {
         "indexed": true,
-        "name": "_batchId",
+        "name": "batchId",
         "type": "uint256"
       },
       {
         "indexed": true,
-        "name": "_collateral",
+        "name": "collateral",
         "type": "address"
       },
       {
