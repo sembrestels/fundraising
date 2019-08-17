@@ -83,6 +83,8 @@ const getIconState = state => {
 const getCollaterals = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.symbol))))
 
 export default ({ orders, onClaim }) => {
+  console.log(orders)
+  // TODO: filter connected user!!!
   const filteredOrders = orders.filter(({ address }) => address === '0xb4124cEB3451635DAcedd11767f004d8a28c6eE7')
   const [state, setState] = useState({
     order: { active: 0, payload: ['All', 'Buy', 'Sell'] },
@@ -94,8 +96,8 @@ export default ({ orders, onClaim }) => {
   const [page, setPage] = useState(0)
   const { name: layoutName } = useLayout()
 
-  const handleClaim = ({ batchId, collateralTokenAddress, type }) => {
-    onClaim(batchId, collateralTokenAddress, type === Order.Type.BUY)
+  const handleClaim = ({ batchId, collateral, type }) => {
+    onClaim(batchId, collateral, type === Order.Type.BUY)
   }
 
   return (
