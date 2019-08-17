@@ -4,14 +4,52 @@ import { Layout, Tabs, Button, Main, SidePanel, SyncIndicator } from '@aragon/ui
 import { useInterval } from './utils/use-interval'
 import AppHeader from './components/AppHeader/AppHeader'
 import PanelContent from './components/NewOrder/PanelContent'
+import PresaleSidePanel from './components/PresaleSidePanel'
 import Reserves from './screens/Reserves'
 import Orders from './screens/Orders'
+import MyOrders from './screens/MyOrders'
 import Overview from './screens/Overview'
+import PresaleView from './screens/Presale'
 import { AppLogicProvider, useAppLogic } from './app-logic'
 import miniMeTokenAbi from './abi/MiniMeToken.json'
 import marketMaker from './abi/BatchedBancorMarketMaker.json'
 
-const tabs = ['Overview', 'Orders', 'Reserve Settings']
+const isPresale = false
+
+const Presale = () => {
+  const { ui } = useAppLogic()
+  const { orderPanel, orderAmount, tokenAmount, token } = ui
+  const tabs = ['Overview', 'Orders']
+  return (
+    <div css="min-width: 320px">
+      <Main assetsUrl="./">
+        <Fragment>
+          <Layout>
+            <AppHeader
+              heading="Fundraising Presale"
+              action={
+                <Button mode="strong" label="Buy Presale Tokens" onClick={() => orderPanel.set(true)}>
+                  Buy Presale Tokens
+                </Button>
+              }
+            />
+            <PresaleView />
+          </Layout>
+          <PresaleSidePanel
+            orderAmount={orderAmount.current}
+            tokenAmount={tokenAmount.current}
+            token={token.current}
+            price={300.0}
+            opened={orderPanel.current}
+            onClose={() => orderPanel.set(false)}
+          />
+        </Fragment>
+      </Main>
+    </div>
+  )
+}
+
+const tabs = ['Overview', 'Orders', 'My Orders', 'Reserve Settings']
 
 const App = () => {
   const { isSyncing, common, overview, ordersView, reserve } = useAppLogic()
@@ -56,6 +94,23 @@ const App = () => {
     }
   }
 
+  const handleClaim = (batchId, collateralTokenAddress, isBuyOrder) => {
+    // TODO: add error handling on failed tx, check token balances
+    if (isBuyOrder) {
+      console.log(`its a buy claim where token: ${collateralTokenAddress}, batchId: ${batchId}`)
+      api
+        .claimBuyOrder(batchId, collateralTokenAddress)
+        .toPromise()
+        .catch(console.error)
+    } else {
+      console.log(`its a sell claim where token: ${collateralTokenAddress}, batchId: ${batchId}`)
+      api
+        .claimSellOrder(batchId, collateralTokenAddress)
+        .toPromise()
+        .catch(console.error)
+    }
+  }
+
   const handleTappedTokenUpdate = tapAmount => {
     // TODO: what floor ?
     api
@@ -89,7 +144,8 @@ const App = () => {
                 />
               )}
               {tabIndex === 1 && <Orders orders={ordersView} />}
-              {tabIndex === 2 && (
+              {tabIndex === 2 && <MyOrders orders={ordersView} onClaim={handleClaim} />}
+              {tabIndex === 3 && (
                 <Reserves
                   bondedToken={common.bondedToken}
                   reserve={{ ...reserve, collateralTokens: common.collateralTokens }}
@@ -114,8 +170,4 @@ const App = () => {
   )
 }
 
-export default () => (
-  <AppLogicProvider>
-    <App />
-  </AppLogicProvider>
-)
+export default () => <AppLogicProvider>{isPresale ? <Presale /> : <App />}</AppLogicProvider>

@@ -43,7 +43,7 @@ const filter = (orders, state) => {
         }
 
         if (type === 'token' && filter.payload[filter.active] !== 'All') {
-          if (filter.payload[filter.active].toLowerCase() !== order.collateral.toLowerCase()) {
+          if (filter.payload[filter.active].toLowerCase() !== order.symbol.toLowerCase()) {
             return false
           }
         }
@@ -88,7 +88,7 @@ const getIconState = state => {
 }
 
 const getHolders = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.address))))
-const getCollaterals = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.collateral))))
+const getCollaterals = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.symbol))))
 
 export default ({ orders }) => {
   const [state, setState] = useState({

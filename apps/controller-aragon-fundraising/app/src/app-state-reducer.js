@@ -56,6 +56,8 @@ const withStateAndCollateral = (order, batches, currentBatch, returns, collatera
     timestamp,
     type,
     symbol,
+    collateral,
+    batchId,
   }
   // handle price and tokens
   const batch = batches.find(b => b.id === batchId && b.collateral === collateral)
