@@ -78,11 +78,12 @@ const App = () => {
   }, 3000)
 
   const handlePlaceOrder = async (collateralTokenAddress, amount, isBuyOrder) => {
+    const intent = { token: { address: collateralTokenAddress, value: amount, spender: common.addresses.marketMaker } }
     // TODO: add error handling on failed tx, check token balances
     if (isBuyOrder) {
       console.log(`its a buy order where token: ${collateralTokenAddress}, amount: ${amount}`)
       api
-        .openBuyOrder(collateralTokenAddress, amount)
+        .openBuyOrder(collateralTokenAddress, amount, intent)
         .toPromise()
         .catch(console.error)
     } else {

@@ -141,6 +141,11 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IMarketM
         tap.withdraw(_token);
     }
 
+    /**
+     * @notice Open a buy order worth `@tokenAmount(_collateral, _value)`
+     * @param _collateral The address of the collateral token to be spent
+     * @param _value The amount of collateral token to be spent
+    */
     function openBuyOrder(address _collateral, uint256 _value) external payable auth(OPEN_BUY_ORDER_ROLE) {
         marketMaker.openBuyOrder.value(msg.value)(msg.sender, _collateral, _value);
     }

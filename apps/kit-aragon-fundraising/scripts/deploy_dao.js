@@ -58,8 +58,8 @@ const increaseBlock = () => {
 
 module.exports = async callback => {
   try {
-    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000, 'Dai', 'DAI')
-    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 1000000000000000000, 'Aragon', 'ANT')
+    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000000000000000000, 'Dai', 'DAI')
+    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000000000000000000, 'Aragon', 'ANT')
 
     const kit = await FundraisingKit.at(process.argv[6])
 
@@ -86,8 +86,8 @@ module.exports = async callback => {
     controller = await Controller.at(controllerAddress)
     marketMaker = await MarketMaker.at(marketMakerAddress)
 
-    await collateral1.approve(marketMakerAddress, 1000000000000000000)
-    await collateral2.approve(marketMakerAddress, 1000000000000000000)
+    await collateral1.approve(marketMakerAddress, 3121)
+    await collateral2.approve(marketMakerAddress, 1000)
 
     console.log('OK')
 
