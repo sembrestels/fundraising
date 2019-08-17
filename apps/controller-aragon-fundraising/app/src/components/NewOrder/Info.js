@@ -1,22 +1,19 @@
 import React from 'react'
+import { Info as Information } from '@aragon/ui'
 
-const Info = ({ isBuyOrder }) => {
+const Info = isBuyOrder => {
   return (
     <div
       css={`
-        background-color: #f1fbff;
-        border-radius: 4px;
-        color: #188aaf;
-        padding: 1rem;
         margin-top: 2rem;
-        border-left: 2px solid #0ab0e5;
       `}
     >
-      <p css="font-weight: 700;">Info</p>
-      <p>
-        For a {isBuyOrder ? 'buying' : 'selling'} order, the more collateral is staked into the bonding curve, you may opt to sell a small share of your tokens
-        in order to redeem collateral from the contract and fund the development of the project.
-      </p>
+      <Information.Action>
+        <p>Note that the price displayed here is indicative and prone to evolve (if other users open additionnal orders in the same batch).</p>
+        <p>
+          If the price goes {isBuyOrder ? 'up' : 'down'} by more than XX percent of the indicated price your order will be cancelled and your funds returned.
+        </p>
+      </Information.Action>
     </div>
   )
 }
