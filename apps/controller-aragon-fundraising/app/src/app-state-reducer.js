@@ -1,5 +1,5 @@
 import { Order } from './constants'
-
+import mock from './bg_mock.json'
 /**
  * Checks whether we have enough data to start the fundraising app
  * @param {Object} state - the background script state
@@ -84,7 +84,7 @@ const withStateAndCollateral = (order, batches, currentBatch, returns, collatera
  */
 const appStateReducer = state => {
   // TODO: remove this quick and dirty hack
-  if (process.env.NODE_ENV === 'test') return JSON.parse(process.env.MOCK)
+  if (process.env.NODE_ENV === 'test') return mock
   // don't reduce not yet populated state
   if (ready(state)) {
     // compute some data to handle it easier on the frontend
