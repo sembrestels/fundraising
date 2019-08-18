@@ -25,44 +25,44 @@ export default ({ overview, bondedToken, currentBatch, polledData: { polledTotal
           <li>
             <div>
               <p className="title">Price</p>
-              <p className="number">${round(price, 3)}</p>
+              <p className="number">$882</p>
             </div>
-            <p className="sub-number green">+$4.82 (0.5%)</p>
+            <p className="sub-number green"> $+82 (+9,2%M)</p>
           </li>
           <li>
             <div>
               <p className="title">Market Cap</p>
-              <p className="number">${marketCap}</p>
+              <p className="number">$185,220</p>
             </div>
-            <p className="sub-number green">+$4.82M</p>
+            <p className="sub-number green">+$25,220 (+15,7%M)</p>
           </li>
           <li>
             <div>
               <p className="title">Trading Volume</p>
-              <p className="number">$1.5 M</p>
+              <p className="number">$8,820</p>
             </div>
-            <p className="sub-number green">$48M (Y)</p>
+            <p className="sub-number green">+10 (5%M)</p>
           </li>
           <li>
             <div>
               <p className="title">Token Supply</p>
-              <p className="number">{round(polledTotalSupply || bondedToken.totalSupply, 3)}</p>
+              <p className="number">210</p>
             </div>
-            <p className="sub-number red">-$23.82 (0.5%)</p>
+            <p className="sub-number green">+10 (5%M)</p>
           </li>
           <li>
             <div>
               <p className="title">Reserves</p>
-              <p className="number">{reserve}</p>
+              <p className="number">$18,500</p>
             </div>
-            <p className="sub-number red">-$0.82M</p>
+            <p className="sub-number red">-$1500 (M)</p>
           </li>
           <li>
             <div>
               <p className="title">Monthly Allowance</p>
-              <p className="number">{allocation}</p>
+              <p className="number">$10,000</p>
             </div>
-            <p className="sub-number green">$48M (Y)</p>
+            <p className="sub-number green"> $120,000 (Y)</p>
           </li>
         </ul>
       </KeyMetrics>

@@ -130,7 +130,7 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
             <div css="display: flex; flex-direction: column; margin-bottom: 1rem;">
               {NotificationLabel('Monthly allocation', hoverTextNotifications[0])}
               <Text as="p" style={{ paddingRight: '12px' }}>
-                {allocation} DAI
+                10000 DAI
               </Text>
             </div>
             <Button css={buttonStyle} onClick={() => setOpened(true)}>
@@ -160,7 +160,7 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
       <Box heading="Bonded Token" css={bondedTokenStyle}>
         <div className="item">
           <p>Total Supply</p>
-          <p className="bold">{polledTotalSupply || bondedToken.totalSupply}</p>
+          <p className="bold">210</p>
         </div>
 
         <div className="item">
@@ -171,9 +171,10 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
         </div>
       </Box>
       <SidePanel opened={opened} onClose={() => setOpened(false)} title="Monthly allocation">
+        <div css="margin: 0 -30px 24px; border: 1px solid #DFE3E8;" />
         <form onSubmit={handleSubmit}>
           <Text as="p">You can increase the tap by {maximumTapIncreasePct * 100}%.</Text>
-          <Text as="p">Current monthly allocation: {allocation} DAI</Text>
+          <Text as="p">Current monthly allocation: 10000 DAI</Text>
           <Wrapper>
             <TextInput
               adornment={
@@ -182,7 +183,7 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
                 </Text>
               }
               adornmentPosition={'end'}
-              value={monthlyAllocation}
+              value={10000}
               onChange={handleMonthlyChange}
               required
             />
