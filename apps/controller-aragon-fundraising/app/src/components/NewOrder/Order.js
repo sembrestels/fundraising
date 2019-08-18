@@ -87,7 +87,7 @@ const Buy = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder }) =
   return (
     <form onSubmit={handleSubmit}>
       {/* TODO: what's the token price if there is 2 collaterals and can choose between them ? */}
-      <Text as="p">Token price {round(price)}</Text>
+      <Text as="p">Token price {round(price)} DAI</Text>
       <InputsWrapper>{getInputs()}</InputsWrapper>
       <Total
         isBuyOrder={isBuyOrder}
@@ -114,6 +114,7 @@ const AmountField = styled.div`
 
 const InputsWrapper = styled.div`
   display: flex;
+  flex-direction: column;
 `
 
 const TransferIconWrapper = styled.div`

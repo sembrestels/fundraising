@@ -17,9 +17,8 @@ import marketMaker from './abi/BatchedBancorMarketMaker.json'
 const isPresale = false
 
 const Presale = () => {
-  const { ui } = useAppLogic()
-  const { orderPanel, orderAmount, tokenAmount, token } = ui
-  const tabs = ['Overview', 'Orders']
+  const [orderPanel, setOrderPanel] = useState(false)
+
   return (
     <div css="min-width: 320px">
       <Main assetsUrl="./">
@@ -28,21 +27,14 @@ const Presale = () => {
             <AppHeader
               heading="Fundraising Presale"
               action={
-                <Button mode="strong" label="Buy Presale Tokens" onClick={() => orderPanel.set(true)}>
+                <Button mode="strong" label="Buy Presale Tokens" onClick={() => setOrderPanel(true)}>
                   Buy Presale Tokens
                 </Button>
               }
             />
             <PresaleView />
           </Layout>
-          <PresaleSidePanel
-            orderAmount={orderAmount.current}
-            tokenAmount={tokenAmount.current}
-            token={token.current}
-            price={300.0}
-            opened={orderPanel.current}
-            onClose={() => orderPanel.set(false)}
-          />
+          <PresaleSidePanel price={300.0} opened={orderPanel} onClose={() => setOrderPanel(false)} />
         </Fragment>
       </Main>
     </div>

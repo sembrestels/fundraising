@@ -1,4 +1,4 @@
-import { Button, DropDown, SidePanel, Text, TextInput, TabBar } from '@aragon/ui'
+import { Button, SidePanel, Text, TextInput } from '@aragon/ui'
 import React from 'react'
 import styled from 'styled-components'
 import transferArrows from '../assets/transferArrows.svg'
