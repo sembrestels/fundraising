@@ -41,14 +41,14 @@ export default ({ overview, bondedToken, currentBatch, polledData: { polledTotal
               <p className="title">Trading Volume</p>
               <p className="number">$8,820</p>
             </div>
-            <p className="sub-number green">+10 (5%M)</p>
+            <p className="sub-number green">+10 (+5%M)</p>
           </li>
           <li>
             <div>
               <p className="title">Token Supply</p>
               <p className="number">210</p>
             </div>
-            <p className="sub-number green">+10 (5%M)</p>
+            <p className="sub-number green">+10 (+5%M)</p>
           </li>
           <li>
             <div>

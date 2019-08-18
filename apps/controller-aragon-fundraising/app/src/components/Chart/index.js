@@ -1,5 +1,5 @@
-import { Box, DropDown } from '@aragon/ui'
-import { differenceInDays, format, startOfMinute, startOfMonth, startOfWeek, startOfDay, endOfDay } from 'date-fns'
+import { DropDown } from '@aragon/ui'
+import { differenceInDays, format, startOfMinute, startOfMonth, startOfWeek, subDays, subHours, subSeconds, startOfDay, endOfDay } from 'date-fns'
 import React, { useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import styled from 'styled-components'
@@ -7,20 +7,50 @@ import DateRangeInput from '../DateRange/DateRangeInput'
 
 const bondingCurveData = [...Array(600).keys()].map(idx => ({
   tokens: idx + 1,
-  price: (idx + 1) ** 2 / 50,
+  Price: (idx + 1) ** 2 / 50,
   label: 'Token: ' + (idx + 1),
 }))
 
-const roundTimeHalfAnHour = time => {
-  const timeToReturn = new Date(time)
+// const everyThirtySecondsData = [...Array(2 * 60 * 24 * 10).keys()]
+//   .map(idx => ({
+//     Price: Math.random() * 140 + 60,
+//     timestamp: subSeconds(new Date(), 30 * idx).getTime(),
+//   }))
+//   .reverse()
+
+const everyThirtySecondsData = [...Array(2 * 60 * 24 * 10).keys()]
+  .map(idx => ({
+    Price: Math.random() * 140 + 60,
+    timestamp: subSeconds(new Date(), 30 * idx).getTime(),
+  }))
+  .reverse()
+
+const everyHourData = [...Array(24 * 365 * 2).keys()]
+  .map(idx => ({
+    Price: Math.random() * 140 + 60,
+    timestamp: subHours(new Date(), idx).getTime(),
+  }))
+  .reverse()
+
+const everyDayData = [...Array(365 * 3).keys()]
+  .map(idx => ({
+    Price: Math.random() * 140 + 60,
+    timestamp: subDays(new Date(), idx).getTime(),
+  }))
+  .reverse()
+
+function roundTimeHalfAnHour(time) {
+  var timeToReturn = new Date(time)
+
   timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
   timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
   timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 30) * 30)
   return timeToReturn
 }
 
-const roundTime6Hours = time => {
-  const timeToReturn = new Date(time)
+function roundTime6Hours(time) {
+  var timeToReturn = new Date(time)
+
   timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
   timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
   timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 60) * 60)
@@ -28,8 +58,9 @@ const roundTime6Hours = time => {
   return timeToReturn
 }
 
-const roundTime12Hours = time => {
-  const timeToReturn = new Date(time)
+function roundTime12Hours(time) {
+  var timeToReturn = new Date(time)
+
   timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
   timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
   timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 60) * 60)
@@ -45,69 +76,70 @@ const getFilteredData = (data, timestampFilter) => {
 
     if (current) {
       cache[timestamp] = {
-        avg: (item.startPrice + current.avg * current.iteration) / (current.iteration + 1),
+        avg: (item.Price + current.avg * current.iteration) / (current.iteration + 1),
         iteration: current.iteration + 1,
       }
     } else {
       cache[timestamp] = {
-        avg: item.startPrice,
+        avg: item.Price,
         iteration: 1,
       }
     }
   })
+
   return cache
 }
 
-const filter = (batches, period, interval) => {
+const filter = (period, interval) => {
   if (period === 0) {
-    const cache = getFilteredData(batches, startOfMinute)
+    const cache = getFilteredData(everyThirtySecondsData, startOfMinute)
 
     return Object.keys(cache)
       .slice(-60)
       .map(key => ({
-        price: cache[key].avg,
+        Price: cache[key].avg,
         date: format(Number(key), 'HH:mm'),
       }))
   }
 
   if (period === 1) {
-    const cache = getFilteredData(batches, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
+    const cache = getFilteredData(everyThirtySecondsData, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
 
     return Object.keys(cache)
       .slice(-48)
       .map(key => ({
-        price: cache[key].avg,
+        Price: cache[key].avg,
         date: format(Number(key), 'MMM dd HH:mm'),
       }))
   }
 
   if (period === 2) {
-    const cache = getFilteredData(batches, timestamp => roundTime12Hours(new Date(timestamp)))
+    const cache = getFilteredData(everyHourData, timestamp => roundTime12Hours(new Date(timestamp)))
 
     return Object.keys(cache)
       .slice(-60)
       .map(key => ({
-        price: cache[key].avg,
+        Price: cache[key].avg,
         date: format(Number(key), 'MMM dd HH:mm'),
       }))
   }
 
   if (period === 3) {
-    const cache = getFilteredData(batches, startOfWeek)
+    const cache = getFilteredData(everyHourData, startOfWeek)
 
     return Object.keys(cache)
       .slice(-56)
       .map(key => ({
-        price: cache[key].avg,
+        Price: cache[key].avg,
         date: format(Number(key), 'y MMM dd'),
       }))
   }
 
   if (period === 4) {
-    const cache = getFilteredData(batches, startOfMonth)
+    const cache = getFilteredData(everyDayData, startOfMonth)
 
     return Object.keys(cache).map(key => ({
-      price: cache[key].avg,
+      Price: cache[key].avg,
       date: format(Number(key), 'y MMM dd'),
     }))
   }
@@ -115,39 +147,39 @@ const filter = (batches, period, interval) => {
   if (period === 5) {
     const difference = differenceInDays(interval.end, interval.start)
     if (difference < 2) {
-      const cache = getFilteredData(batches, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
+      const cache = getFilteredData(everyThirtySecondsData, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
 
       return Object.keys(cache)
         .filter(key => Number(key) > interval.start && Number(key) < interval.end)
         .map(key => ({
-          price: cache[key].avg,
+          Price: cache[key].avg,
           date: format(Number(key), 'MMM dd HH:mm'),
         }))
     } else if (difference < 31) {
-      const cache = getFilteredData(batches, timestamp => roundTime6Hours(new Date(timestamp)))
+      const cache = getFilteredData(everyHourData, timestamp => roundTime6Hours(new Date(timestamp)))
 
       return Object.keys(cache)
         .filter(key => Number(key) > interval.start && Number(key) < interval.end)
         .map(key => ({
-          price: cache[key].avg,
+          Price: cache[key].avg,
           date: format(Number(key), 'MMM dd HH:mm'),
         }))
     } else if (difference < 365) {
-      const cache = getFilteredData(batches, startOfWeek)
+      const cache = getFilteredData(everyHourData, startOfWeek)
 
       return Object.keys(cache)
         .filter(key => Number(key) > interval.start && Number(key) < interval.end)
         .map(key => ({
-          price: cache[key].avg,
+          Price: cache[key].avg,
           date: format(Number(key), 'y MMM dd'),
         }))
     } else {
-      const cache = getFilteredData(batches, startOfMonth)
+      const cache = getFilteredData(everyDayData, startOfMonth)
 
       return Object.keys(cache)
         .filter(key => Number(key) > interval.start && Number(key) < interval.end)
         .map(key => ({
-          price: cache[key].avg,
+          Price: cache[key].avg,
           date: format(Number(key), 'y MMM dd'),
         }))
     }
@@ -171,7 +203,7 @@ const filter = (batches, period, interval) => {
 
 const items = ['Bonding curve', 'History chart']
 
-export default ({ batches }) => {
+export default () => {
   const [activeItem, setActiveItem] = useState(0)
   const [activeNavItem, setActiveNavItem] = useState(0)
   const [date, setDate] = useState({
@@ -236,18 +268,18 @@ export default ({ batches }) => {
             <YAxis tickMargin={25} tickLine={false} axisLine={false} />
             <ReferenceDot isFront x={210} y={882} r={6} fill="#08BEE5" stroke="none" />
             <Tooltip labelFormatter={value => 'Bonded tokens: ' + value} />
-            <Area isAnimationActive strokeWidth={2} type="monotone" dataKey="price" stroke="#08BEE5" fillOpacity={1} fill="url(#colorBlue)" />
+            <Area isAnimationActive={true} strokeWidth={2} type="monotone" dataKey="Price" stroke="#08BEE5" fillOpacity={1} fill="url(#colorBlue)" />
           </AreaChart>
         </ResponsiveContainer>
       )}
       {activeItem === 1 && (
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart margin={{ left: 40, bottom: 40, top: 40, right: 40 }} data={filter(batches, activeNavItem, date)}>
+          <BarChart margin={{ left: 40, bottom: 40, top: 40, right: 40 }} data={filter(activeNavItem, date)}>
             <Tooltip cursor={{ fill: '#08BEE5', fillOpacity: '0.2' }} />
             <CartesianGrid strokeDasharray="8 8" vertical={false} />
             <XAxis dataKey="date" minTickGap={100} interval="preserveStartEnd" tickMargin={25} tickLine={false} axisLine={false} />
             <YAxis tickMargin={25} tickLine={false} axisLine={false} />
-            <Bar isAnimationActive dataKey="price" fill="#08BEE5" />
+            <Bar isAnimationActive={true} dataKey="Price" fill="#08BEE5" />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -255,8 +287,11 @@ export default ({ batches }) => {
   )
 }
 
-const Chart = styled(Box)`
+const Chart = styled.div`
+  background: #fff;
+  border: 1px solid #dde4e9;
   box-sizing: border-box;
+  border-radius: 3px;
 
   .navbar {
     display: flex;
