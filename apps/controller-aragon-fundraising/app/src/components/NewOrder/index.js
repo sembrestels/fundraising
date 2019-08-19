@@ -4,7 +4,7 @@ import { TabBar } from '@aragon/ui'
 
 import Order from './Order'
 
-const PanelContent = ({ opened, collaterals, bondedToken, price, onOrder }) => {
+const NewOrder = ({ opened, collaterals, bondedToken, price, onOrder }) => {
   const [screenIndex, setScreenIndex] = useState(0)
 
   // handle reset when opening
@@ -31,4 +31,4 @@ const TabBarWrapper = styled.div`
   margin: 0 -30px 30px;
 `
 
-export default PanelContent
+export default NewOrder

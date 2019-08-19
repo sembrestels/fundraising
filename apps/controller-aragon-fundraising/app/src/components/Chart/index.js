@@ -172,8 +172,8 @@ const filter = (batches, period, interval) => {
 const items = ['Bonding curve', 'History chart']
 
 export default ({ batches }) => {
-  const [activeItem, setActiveItem] = useState(0)
-  const [activeNavItem, setActiveNavItem] = useState(0)
+  const [activeItem, setActiveItem] = useState(1)
+  const [activeNavItem, setActiveNavItem] = useState(1)
   const [date, setDate] = useState({
     start: startOfDay(new Date()),
     end: endOfDay(new Date()),
@@ -216,10 +216,10 @@ export default ({ batches }) => {
         ) : (
           <div />
         )}
-        <div className="chart-view">
+        {/* <div className="chart-view">
           <p className="chart-view-text">Chart view</p>
           <DropDown items={items} selected={activeItem} onChange={index => setActiveItem(index)} />
-        </div>
+        </div> */}
       </div>
       {activeItem === 0 && (
         <ResponsiveContainer height={400}>
@@ -267,6 +267,8 @@ const Chart = styled(Box)`
 
     .timeline {
       display: flex;
+      justify-content: space-between;
+      width: 100%;
 
       & > div:nth-child(1) {
         display: flex;

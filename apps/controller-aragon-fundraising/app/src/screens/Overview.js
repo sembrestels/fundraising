@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Box } from '@aragon/ui'
+import BN from 'bn.js'
 import Chart from '../components/Chart'
 import { round } from '../lib/math-utils'
 
@@ -27,42 +28,42 @@ export default ({ overview, bondedToken, currentBatch, polledData: { polledTotal
               <p className="title">Price</p>
               <p className="number">${round(price, 3)}</p>
             </div>
-            <p className="sub-number green">+$4.82 (0.5%)</p>
+            {/* <p className="sub-number green">+$4.82 (0.5%)</p> */}
           </li>
           <li>
             <div>
               <p className="title">Market Cap</p>
               <p className="number">${marketCap}</p>
             </div>
-            <p className="sub-number green">+$4.82M</p>
+            {/* <p className="sub-number green">+$4.82M</p> */}
           </li>
           <li>
             <div>
               <p className="title">Trading Volume</p>
               <p className="number">$1.5 M</p>
             </div>
-            <p className="sub-number green">$48M (Y)</p>
+            {/* <p className="sub-number green">$48M (Y)</p> */}
           </li>
           <li>
             <div>
               <p className="title">Token Supply</p>
               <p className="number">{round(polledTotalSupply || bondedToken.totalSupply, 3)}</p>
             </div>
-            <p className="sub-number red">-$23.82 (0.5%)</p>
+            {/* <p className="sub-number red">-$23.82 (0.5%)</p> */}
           </li>
           <li>
             <div>
               <p className="title">Reserves</p>
               <p className="number">{reserve}</p>
             </div>
-            <p className="sub-number red">-$0.82M</p>
+            {/* <p className="sub-number red">-$0.82M</p> */}
           </li>
           <li>
             <div>
               <p className="title">Monthly Allowance</p>
               <p className="number">{allocation}</p>
             </div>
-            <p className="sub-number green">$48M (Y)</p>
+            {/* <p className="sub-number green">$48M (Y)</p> */}
           </li>
         </ul>
       </KeyMetrics>

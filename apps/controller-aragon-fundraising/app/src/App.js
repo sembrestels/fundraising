@@ -3,7 +3,7 @@ import { useApi } from '@aragon/api-react'
 import { Layout, Tabs, Button, Main, SidePanel, SyncIndicator } from '@aragon/ui'
 import { useInterval } from './utils/use-interval'
 import AppHeader from './components/AppHeader/AppHeader'
-import PanelContent from './components/NewOrder/PanelContent'
+import NewOrder from './components/NewOrder'
 import PresaleSidePanel from './components/PresaleSidePanel'
 import Reserves from './screens/Reserves'
 import Orders from './screens/Orders'
@@ -104,10 +104,9 @@ const App = () => {
     }
   }
 
-  const handleTappedTokenUpdate = tapAmount => {
-    // TODO: what floor ?
+  const handleTappedTokenUpdate = (tapAmount, floor) => {
     api
-      .updateTokenTap(common.daiAddress, tapAmount, 0)
+      .updateTokenTap(common.daiAddress, tapAmount, floor)
       .toPromise()
       .catch(console.error)
   }
@@ -137,7 +136,7 @@ const App = () => {
                 />
               )}
               {tabIndex === 1 && <Orders orders={ordersView} />}
-              {tabIndex === 2 && <MyOrders orders={ordersView} onClaim={handleClaim} />}
+              {tabIndex === 2 && <MyOrders orders={ordersView} account={common.connectedAccount} onClaim={handleClaim} />}
               {tabIndex === 3 && (
                 <Reserves
                   bondedToken={common.bondedToken}
@@ -148,7 +147,7 @@ const App = () => {
               )}
             </Layout>
             <SidePanel opened={orderPanel} onClose={() => setOrderPanel(false)} title="New Order">
-              <PanelContent
+              <NewOrder
                 opened={orderPanel}
                 collaterals={common.collateralTokens}
                 bondedToken={common.bondedToken}

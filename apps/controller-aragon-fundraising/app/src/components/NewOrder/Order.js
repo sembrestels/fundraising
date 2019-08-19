@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { Button, DropDown, IconCross, Text, TextInput, theme, unselectable } from '@aragon/ui'
+import { Button, DropDown, Text, TextInput, theme, unselectable } from '@aragon/ui'
 import Total from './Total'
 import Info from './Info'
 import { round } from '../../lib/math-utils'
 
 import transferArrows from '../../assets/transferArrows.svg'
 
-const Buy = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder }) => {
+const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder }) => {
   const [selectedCollateral, setSelectedCollateral] = useState(0)
   const [collateralAmount, setCollateralAmount] = useState(0)
   const [tokenAmount, setTokenAmount] = useState(0)
@@ -156,17 +156,4 @@ const StyledTextBlock = styled(Text.Block).attrs({
   display: flex;
 `
 
-const ValidationError = ({ message }) => (
-  <ValidationErrorBlock>
-    <IconCross />
-    <Text size="small" style={{ marginLeft: '10px' }}>
-      {message}
-    </Text>
-  </ValidationErrorBlock>
-)
-
-const ValidationErrorBlock = styled.p`
-  margin-top: 15px;
-`
-
-export default Buy
+export default Order

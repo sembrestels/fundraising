@@ -58,8 +58,8 @@ const increaseBlock = () => {
 
 module.exports = async callback => {
   try {
-    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000000000000000000, 'Dai', 'DAI')
-    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000000000000000000, 'Aragon', 'ANT')
+    const collateral1 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000e18, 'Dai', 'DAI')
+    const collateral2 = await TokenMock.new('0xb4124cEB3451635DAcedd11767f004d8a28c6eE7', 100000e18, 'Aragon', 'ANT')
 
     const kit = await FundraisingKit.at(process.argv[6])
 

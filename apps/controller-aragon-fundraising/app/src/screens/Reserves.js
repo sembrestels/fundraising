@@ -1,8 +1,10 @@
-import React, { useState } from 'react'
-import { Badge, Box, Button, DiscButton, Text, TextInput, SidePanel } from '@aragon/ui'
+import React, { useEffect, useState } from 'react'
+import { Badge, Box, Button, DiscButton, Text, TextInput, theme, SidePanel, unselectable } from '@aragon/ui'
 import styled from 'styled-components'
+import { differenceInMonths } from 'date-fns'
 import EditIcon from '../assets/EditIcon.svg'
 import HoverNotification from '../components/HoverNotification/HoverNotification'
+import ValidationError from '../components/ValidationError'
 
 // TODO: handle edit monthly alocation validation
 
@@ -10,6 +12,7 @@ import HoverNotification from '../components/HoverNotification/HoverNotification
 const hoverTextNotifications = [
   'This will update the monthly allocation (tap rate) i.e. how much funds can be released within the bonding curve contract per 30-day period. Note: this value must be less than the max increase limit set inside the contract.',
   "You're essentially bonding collateral when buying tokens (increasing the supply), and burning collateral when selling tokens (decreasing the supply). These relationships are defined by the smart contract.",
+  'FILL ME PLZ!!', // TODO: add floor notification
 ]
 
 const buttonStyle = `
@@ -105,20 +108,70 @@ const ContentWrapper = styled.div`
 
 export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updateTappedToken }) => {
   const {
-    tap: { allocation },
+    tap: { allocation, floor, timestamp },
     maximumTapIncreasePct,
     collateralTokens,
   } = reserve
-  const [monthlyAllocation, setMonthlyAllocation] = useState(allocation)
+  const [newAllocation, setNewAllocation] = useState(allocation)
+  const [newFloor, setNewFloor] = useState(floor)
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [valid, setValid] = useState(false)
   const [opened, setOpened] = useState(false)
 
+  // handle reset when opening
+  useEffect(() => {
+    if (opened) {
+      // reset to default values
+      setNewAllocation(allocation)
+      setNewFloor(floor)
+      setErrorMessage(null)
+    }
+  }, [opened])
+
+  // validate when new allocation or new floor
+  useEffect(() => {
+    validate()
+  }, [newAllocation, newFloor])
+
   const handleMonthlyChange = event => {
-    setMonthlyAllocation(parseInt(event.target.value, 10))
+    setNewAllocation(event.target.value)
   }
+
+  const handleFloorChange = event => {
+    setNewFloor(event.target.value)
+  }
+
+  const validate = () => {
+    // check if it's a tap decrease
+    const isDecrease = allocation >= newAllocation
+    // check if the tap increase respects the max tap increase
+    const regularIncrease = allocation * maximumTapIncreasePct + allocation >= newAllocation
+    // check if the last tap update is at least one month old
+    // when a tap have never been updated, there's no timestamp, and can be updated
+    const atLeastOneMonthOld = timestamp ? differenceInMonths(new Date(), new Date(timestamp)) >= 1 : true
+    // updating tap is valid if:
+    // - it's a decrease
+    // - or it's a regular increase after at least one month since the previous increase (or never been updated)
+    const valid = isDecrease || (regularIncrease && atLeastOneMonthOld)
+    if (valid) {
+      setErrorMessage(null)
+      setValid(true)
+    } else {
+      setErrorMessage(
+        !atLeastOneMonthOld
+          ? 'You cannot increase the tap more than once per month'
+          : `You cannot increase the tap by more than ${maximumTapIncreasePct * 100}%}`
+      )
+      setValid(false)
+    }
+  }
+
   const handleSubmit = event => {
     event.preventDefault()
-    setOpened(false)
-    updateTappedToken(monthlyAllocation)
+    if (valid) {
+      setOpened(false)
+      updateTappedToken(newAllocation, newFloor)
+    }
   }
 
   return (
@@ -131,6 +184,12 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
               {NotificationLabel('Monthly allocation', hoverTextNotifications[0])}
               <Text as="p" style={{ paddingRight: '12px' }}>
                 {allocation} DAI
+              </Text>
+            </div>
+            <div css="display: flex; flex-direction: column; margin-bottom: 1rem;">
+              {NotificationLabel('Floor', hoverTextNotifications[2])}
+              <Text as="p" style={{ paddingRight: '12px' }}>
+                {floor} DAI
               </Text>
             </div>
             <Button css={buttonStyle} onClick={() => setOpened(true)}>
@@ -173,34 +232,49 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
       <SidePanel opened={opened} onClose={() => setOpened(false)} title="Monthly allocation">
         <div css="margin: 0 -30px 24px; border: 1px solid #DFE3E8;" />
         <form onSubmit={handleSubmit}>
-          <Text as="p">You can increase the tap by {maximumTapIncreasePct * 100}%.</Text>
-          <Text as="p">Current monthly allocation: {allocation} DAI</Text>
           <Wrapper>
-            <TextInput
-              adornment={
-                <Text as="p" style={{ paddingRight: '12px' }}>
-                  DAI
-                </Text>
-              }
-              adornmentPosition={'end'}
-              value={monthlyAllocation}
-              onChange={handleMonthlyChange}
-              required
-            />
+            <Text as="p">You can increase the tap by {maximumTapIncreasePct * 100}%.</Text>
+            <Text as="p">Current monthly allocation: {allocation} DAI</Text>
+            <Text as="p">Current floor: {floor} DAI</Text>
           </Wrapper>
           <Wrapper>
-            <Button mode="strong" type="submit" wide>
+            <label>
+              <StyledTextBlock>Tap (DAI)</StyledTextBlock>
+            </label>
+            <TextInput type="number" value={newAllocation} onChange={handleMonthlyChange} wide required />
+          </Wrapper>
+          <Wrapper>
+            <label>
+              <StyledTextBlock>Floor (DAI)</StyledTextBlock>
+            </label>
+            <TextInput type="number" value={newFloor} onChange={handleFloorChange} wide required />
+          </Wrapper>
+          <ButtonWrapper>
+            <Button mode="strong" type="submit" disabled={!valid} wide>
               Edit monthly allocation
             </Button>
-          </Wrapper>
+          </ButtonWrapper>
+          {errorMessage && <ValidationError message={errorMessage} />}
         </form>
       </SidePanel>
     </ContentWrapper>
   )
 }
 
-const Wrapper = styled.div`
+const ButtonWrapper = styled.div`
   padding-top: 10px;
+`
+
+const Wrapper = styled.div`
+  margin-bottom: 20px;
+`
+
+const StyledTextBlock = styled(Text.Block).attrs({
+  color: theme.textSecondary,
+  smallcaps: true,
+})`
+  ${unselectable()};
+  display: flex;
 `
 
 const NotificationLabel = (label, hoverText) => (

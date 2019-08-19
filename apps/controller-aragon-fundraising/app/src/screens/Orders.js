@@ -15,7 +15,6 @@ import {
   IconEllipsis,
   shortenAddress,
 } from '@aragon/ui'
-import BN from 'bignumber.js'
 import { format, subYears } from 'date-fns'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
@@ -64,13 +63,9 @@ const filter = (orders, state) => {
     })
     .sort((a, b) => {
       if (state.price.payload[state.price.active] === 'Ascending') {
-        return BN(a.price)
-          .minus(BN(b.price))
-          .toNumber()
+        return a.price.minus(b.price).toNumber()
       } else if (state.price.payload[state.price.active] === 'Descending') {
-        return BN(b.price)
-          .minus(BN(a.price))
-          .toNumber()
+        return b.price.minus(a.price).toNumber()
       }
 
       return 0

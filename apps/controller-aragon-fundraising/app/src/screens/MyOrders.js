@@ -14,7 +14,6 @@ import {
   IconEllipsis,
   Button,
 } from '@aragon/ui'
-import BN from 'bignumber.js'
 import { format, subYears } from 'date-fns'
 import styled from 'styled-components'
 import DateRangeInput from '../components/DateRange/DateRangeInput'
@@ -57,13 +56,9 @@ const filter = (orders, state) => {
     })
     .sort((a, b) => {
       if (state.price.payload[state.price.active] === 'Ascending') {
-        return BN(a.price)
-          .minus(BN(b.price))
-          .toNumber()
+        return a.price.minus(b.price).toNumber()
       } else if (state.price.payload[state.price.active] === 'Descending') {
-        return BN(b.price)
-          .minus(BN(a.price))
-          .toNumber()
+        return b.price.minus(a.price).toNumber()
       }
 
       return 0
@@ -82,10 +77,8 @@ const getIconState = state => {
 
 const getCollaterals = orders => ['All'].concat(Array.from(new Set(orders.map(o => o.symbol))))
 
-export default ({ orders, onClaim }) => {
-  console.log(orders)
-  // TODO: filter connected user!!!
-  const filteredOrders = orders.filter(({ address }) => address === '0xb4124cEB3451635DAcedd11767f004d8a28c6eE7')
+export default ({ orders, account, onClaim }) => {
+  const filteredOrders = orders.filter(({ address }) => address === account)
   const [state, setState] = useState({
     order: { active: 0, payload: ['All', 'Buy', 'Sell'] },
     price: { active: 0, payload: ['Default', 'Ascending', 'Descending'] },
