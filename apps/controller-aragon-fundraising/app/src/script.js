@@ -27,6 +27,7 @@ const tokenSymbols = new Map() // External contract -> symbol
 const app = new Aragon()
 
 // get the token address to initialize ourselves
+// TODO: add formula contract (abi and stuff)
 const externals = zip(app.call('reserve'), app.call('tap'), app.call('marketMaker'))
 retryEvery(retry => {
   externals.subscribe(
@@ -149,6 +150,7 @@ const initState = settings => async cachedState => {
       tap: settings.tap.address,
       pool: settings.pool.address,
     },
+    network: settings.network,
   }
   const withTapData = await loadTapData(newState, settings)
   const withPoolData = await loadPoolData(withTapData, settings)

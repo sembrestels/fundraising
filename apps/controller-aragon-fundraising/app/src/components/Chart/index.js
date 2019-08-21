@@ -1,173 +1,16 @@
 import { Box, DropDown } from '@aragon/ui'
-import { differenceInDays, format, startOfMinute, startOfMonth, startOfWeek, startOfDay, endOfDay } from 'date-fns'
 import React, { useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import styled from 'styled-components'
+import { startOfDay, endOfDay } from 'date-fns'
 import DateRangeInput from '../DateRange/DateRangeInput'
+import { filter } from './utils'
 
 const bondingCurveData = [...Array(600).keys()].map(idx => ({
   tokens: idx + 1,
   price: (idx + 1) ** 2 / 50,
   label: 'Token: ' + (idx + 1),
 }))
-
-const roundTimeHalfAnHour = time => {
-  const timeToReturn = new Date(time)
-  timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
-  timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
-  timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 30) * 30)
-  return timeToReturn
-}
-
-const roundTime6Hours = time => {
-  const timeToReturn = new Date(time)
-  timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
-  timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
-  timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 60) * 60)
-  timeToReturn.setHours(Math.round(timeToReturn.getHours() / 6) * 6)
-  return timeToReturn
-}
-
-const roundTime12Hours = time => {
-  const timeToReturn = new Date(time)
-  timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000)
-  timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60)
-  timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 60) * 60)
-  timeToReturn.setHours(Math.round(timeToReturn.getHours() / 12) * 12)
-  return timeToReturn
-}
-
-const getFilteredData = (data, timestampFilter) => {
-  let cache = {}
-  data.forEach(item => {
-    const timestamp = timestampFilter(item.timestamp).getTime()
-    let current = cache[timestamp]
-
-    if (current) {
-      cache[timestamp] = {
-        avg: (item.startPrice + current.avg * current.iteration) / (current.iteration + 1),
-        iteration: current.iteration + 1,
-      }
-    } else {
-      cache[timestamp] = {
-        avg: item.startPrice,
-        iteration: 1,
-      }
-    }
-  })
-  return cache
-}
-
-const filter = (batches, period, interval) => {
-  if (period === 0) {
-    const cache = getFilteredData(batches, startOfMinute)
-
-    return Object.keys(cache)
-      .slice(-60)
-      .map(key => ({
-        price: cache[key].avg,
-        date: format(Number(key), 'HH:mm'),
-      }))
-  }
-
-  if (period === 1) {
-    const cache = getFilteredData(batches, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
-
-    return Object.keys(cache)
-      .slice(-48)
-      .map(key => ({
-        price: cache[key].avg,
-        date: format(Number(key), 'MMM dd HH:mm'),
-      }))
-  }
-
-  if (period === 2) {
-    const cache = getFilteredData(batches, timestamp => roundTime12Hours(new Date(timestamp)))
-
-    return Object.keys(cache)
-      .slice(-60)
-      .map(key => ({
-        price: cache[key].avg,
-        date: format(Number(key), 'MMM dd HH:mm'),
-      }))
-  }
-
-  if (period === 3) {
-    const cache = getFilteredData(batches, startOfWeek)
-
-    return Object.keys(cache)
-      .slice(-56)
-      .map(key => ({
-        price: cache[key].avg,
-        date: format(Number(key), 'y MMM dd'),
-      }))
-  }
-
-  if (period === 4) {
-    const cache = getFilteredData(batches, startOfMonth)
-
-    return Object.keys(cache).map(key => ({
-      price: cache[key].avg,
-      date: format(Number(key), 'y MMM dd'),
-    }))
-  }
-
-  if (period === 5) {
-    const difference = differenceInDays(interval.end, interval.start)
-    if (difference < 2) {
-      const cache = getFilteredData(batches, timestamp => roundTimeHalfAnHour(new Date(timestamp)))
-
-      return Object.keys(cache)
-        .filter(key => Number(key) > interval.start && Number(key) < interval.end)
-        .map(key => ({
-          price: cache[key].avg,
-          date: format(Number(key), 'MMM dd HH:mm'),
-        }))
-    } else if (difference < 31) {
-      const cache = getFilteredData(batches, timestamp => roundTime6Hours(new Date(timestamp)))
-
-      return Object.keys(cache)
-        .filter(key => Number(key) > interval.start && Number(key) < interval.end)
-        .map(key => ({
-          price: cache[key].avg,
-          date: format(Number(key), 'MMM dd HH:mm'),
-        }))
-    } else if (difference < 365) {
-      const cache = getFilteredData(batches, startOfWeek)
-
-      return Object.keys(cache)
-        .filter(key => Number(key) > interval.start && Number(key) < interval.end)
-        .map(key => ({
-          price: cache[key].avg,
-          date: format(Number(key), 'y MMM dd'),
-        }))
-    } else {
-      const cache = getFilteredData(batches, startOfMonth)
-
-      return Object.keys(cache)
-        .filter(key => Number(key) > interval.start && Number(key) < interval.end)
-        .map(key => ({
-          price: cache[key].avg,
-          date: format(Number(key), 'y MMM dd'),
-        }))
-    }
-  }
-}
-
-// const orders = [
-//   {
-//     type: BUY | SELL,
-//     holder: 0xaf85...,
-//     collateral: 0xefa....,
-//     price: 6.7,
-//     amount: 65,
-//     timestamp: 12312315153,
-//   },
-//   {
-//      ...
-//   },
-//   ...
-// ]
 
 const items = ['Bonding curve', 'History chart']
 
@@ -216,10 +59,10 @@ export default ({ batches }) => {
         ) : (
           <div />
         )}
-        {/* <div className="chart-view">
+        <div className="chart-view">
           <p className="chart-view-text">Chart view</p>
           <DropDown items={items} selected={activeItem} onChange={index => setActiveItem(index)} />
-        </div> */}
+        </div>
       </div>
       {activeItem === 0 && (
         <ResponsiveContainer height={400}>
@@ -242,7 +85,7 @@ export default ({ batches }) => {
       )}
       {activeItem === 1 && (
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart margin={{ left: 40, bottom: 40, top: 40, right: 40 }} data={filter(batches, activeNavItem, date)}>
+          <BarChart margin={{ left: 40, bottom: 40, top: 40, right: 40 }} data={filter(batches, activeNavItem, date)} barSize={20}>
             <Tooltip cursor={{ fill: '#08BEE5', fillOpacity: '0.2' }} />
             <CartesianGrid strokeDasharray="8 8" vertical={false} />
             <XAxis dataKey="date" minTickGap={100} interval="preserveStartEnd" tickMargin={25} tickLine={false} axisLine={false} />
