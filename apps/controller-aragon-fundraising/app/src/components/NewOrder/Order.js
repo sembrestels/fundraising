@@ -11,6 +11,7 @@ const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder })
   const [selectedCollateral, setSelectedCollateral] = useState(0)
   const [collateralAmount, setCollateralAmount] = useState(0)
   const [tokenAmount, setTokenAmount] = useState(0)
+  const [valid, setValid] = useState(false)
 
   const collateralAmountInput = useRef(null)
   const tokenAmountInput = useRef(null)
@@ -31,24 +32,35 @@ const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder })
     }
   }, [opened, isBuyOrder])
 
+  // validate when new amounts
+  useEffect(() => {
+    validate()
+  }, [collateralAmount, tokenAmount])
+
   const handleCollateralAmountUpdate = event => {
-    setCollateralAmount(Number(event.target.value))
-    setTokenAmount(Number(event.target.value / price))
+    setCollateralAmount(event.target.value)
+    setTokenAmount(event.target.value / price)
   }
 
   const handleTokenAmountUpdate = event => {
-    setTokenAmount(Number(event.target.value))
-    setCollateralAmount(Number(event.target.value * price))
+    setTokenAmount(event.target.value)
+    setCollateralAmount(event.target.value * price)
   }
 
-  const isDisabledOrder = () => {
+  const validate = () => {
     // TODO: is this good, when token price is very high/low ?
-    return collateralAmount <= 0 || tokenAmount <= 0
+    // TODO: check balance ?
+    // TODO: error message ?
+    setValid(collateralAmount > 0 || tokenAmount > 0)
+  }
+
+  const roundAmount = amount => {
+    return amount ? round(amount) : amount
   }
 
   const handleSubmit = event => {
     event.preventDefault()
-    onOrder(collaterals[selectedCollateral].address, collateralAmount, isBuyOrder)
+    if (valid) onOrder(collaterals[selectedCollateral].address, collateralAmount, isBuyOrder)
   }
 
   const getInputs = () => {
@@ -61,7 +73,7 @@ const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder })
           <TextInput
             ref={collateralAmountInput}
             type="number"
-            value={round(collateralAmount)}
+            value={roundAmount(collateralAmount)}
             onChange={handleCollateralAmountUpdate}
             min={0}
             step="any"
@@ -77,7 +89,16 @@ const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder })
           <StyledTextBlock>TOKEN AMOUNT</StyledTextBlock>
         </label>
         <CombinedInput>
-          <TextInput ref={tokenAmountInput} type="number" value={round(tokenAmount)} onChange={handleTokenAmountUpdate} min={0} step="any" required wide />
+          <TextInput
+            ref={tokenAmountInput}
+            type="number"
+            value={roundAmount(tokenAmount)}
+            onChange={handleTokenAmountUpdate}
+            min={0}
+            step="any"
+            required
+            wide
+          />
         </CombinedInput>
       </AmountField>,
     ]
@@ -87,15 +108,15 @@ const Order = ({ opened, isBuyOrder, collaterals, bondedToken, price, onOrder })
   return (
     <form onSubmit={handleSubmit}>
       {/* TODO: what's the token price if there is 2 collaterals and can choose between them ? */}
-      <Text as="p">Token price {round(price)} DAI</Text>
+      <Text as="p">Token price {roundAmount(price)} DAI</Text>
       <InputsWrapper>{getInputs()}</InputsWrapper>
       <Total
         isBuyOrder={isBuyOrder}
-        collateral={{ value: round(collateralAmount), symbol: collateralSymbols[selectedCollateral] }}
-        token={{ value: round(tokenAmount), symbol: bondedToken.symbol }}
+        collateral={{ value: roundAmount(collateralAmount), symbol: collateralSymbols[selectedCollateral] }}
+        token={{ value: roundAmount(tokenAmount), symbol: bondedToken.symbol }}
       />
       <ButtonWrapper>
-        <Button mode="strong" type="submit" disabled={isDisabledOrder()} wide>
+        <Button mode="strong" type="submit" disabled={!valid} wide>
           Place {isBuyOrder ? 'buy' : 'sell'} order
         </Button>
       </ButtonWrapper>
