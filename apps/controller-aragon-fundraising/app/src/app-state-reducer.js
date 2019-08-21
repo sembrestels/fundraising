@@ -1,5 +1,6 @@
 import { Order } from './constants'
 import mock from './bg_mock.json'
+import { ETHER_TOKEN_VERIFIED_BY_SYMBOL } from './lib/verified-tokens'
 /**
  * Checks whether we have enough data to start the fundraising app
  * @param {Object} state - the background script state
@@ -11,6 +12,33 @@ const ready = state => {
   const hasCollateralTokens = state !== null && state.collateralTokens
   const hasTaps = state !== null && state.taps
   return synced && hasCollateralTokens && hasTaps
+}
+
+/**
+ * DAI and ANT are the only collaterals accepted to start the app on rinkeby or mainnet
+ * @param {Map} collateralTokens - collaterals found in the app
+ * @param {Object} network - id and type of the network
+ * @returns {boolean} true if network is rinkeby or mainnet and collaterals are the good ones, true no matter what on any other networks
+ */
+const checkCollaterals = (collateralTokens, network) => {
+  // TODO: check only mainnet and rinkeby, otherwise it's ok
+  // https://github.com/aragon/dao-templates/blob/9886bba4c0/helpers/test-token-deployer/index.js
+  // 0 is ANT and 9 DAI
+  if (network.type === 'private') return true
+  else {
+    // if network type is not private we assume its one of the following:
+    // main, kovan, rinkeby, ropsten
+    const realDaiAddress = ETHER_TOKEN_VERIFIED_BY_SYMBOL.get('DAI').toLowerCase()
+    const realAntAddress = ETHER_TOKEN_VERIFIED_BY_SYMBOL.get('ANT').toLowerCase()
+    // get DAI and ANT addresses from the fundraising app
+    const collaterals = Array.from(collateralTokens).map(([address, { symbol }]) => ({ address, symbol }))
+    const daiAddress = collaterals.find(c => c.symbol === 'DAI')
+    const antAddress = collaterals.find(c => c.symbol === 'ANT')
+    // check they are the same
+    const sameDai = daiAddress && daiAddress.toLowerCase() === realDaiAddress
+    const sameAnt = antAddress && antAddress.toLowerCase() === realAntAddress
+    return sameDai && sameAnt
+  }
 }
 
 /**
@@ -86,17 +114,18 @@ const appStateReducer = state => {
   // TODO: remove this quick and dirty hack
   if (process.env.NODE_ENV === 'test') return mock
   // don't reduce not yet populated state
-  if (ready(state)) {
+  const isReady = ready(state)
+  if (isReady) {
     // compute some data to handle it easier on the frontend
     const {
       // common
-      isSyncing,
       connectedAccount,
       beneficiary,
       bondedToken,
       addresses,
       currentBatch,
       batches,
+      network,
       // reserve
       ppm,
       taps,
@@ -108,6 +137,7 @@ const appStateReducer = state => {
     } = state
     const daiAddress = Array.from(collateralTokens).find(t => t[1].symbol === 'DAI')[0]
     const tap = taps.get(daiAddress)
+    const collateralsAreOk = checkCollaterals(collateralTokens, network)
     // common data
     const common = {
       connectedAccount,
@@ -121,6 +151,7 @@ const appStateReducer = state => {
         symbol,
         ratio: parseInt(reserveRatio, 10) / parseInt(ppm, 10),
       })),
+      collateralsAreOk,
     }
     // overview tab data
     const overview = {
@@ -138,7 +169,7 @@ const appStateReducer = state => {
     }
     // reduced state
     const reducedState = {
-      isSyncing,
+      isReady,
       common,
       overview,
       ordersView,
@@ -147,7 +178,10 @@ const appStateReducer = state => {
     console.log(JSON.stringify(reducedState))
     return reducedState
   } else {
-    return state
+    return {
+      ...state,
+      isReady,
+    }
   }
 }
 

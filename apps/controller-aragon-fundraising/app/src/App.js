@@ -44,8 +44,7 @@ const Presale = () => {
 const tabs = ['Overview', 'Orders', 'My Orders', 'Reserve Settings']
 
 const App = () => {
-  const { isSyncing, common, overview, ordersView, reserve } = useAppLogic()
-  const ready = !isSyncing && common && overview && reserve
+  const { isReady, common, overview, ordersView, reserve } = useAppLogic()
 
   const [orderPanel, setOrderPanel] = useState(false)
   const [tabIndex, setTabindex] = useState(0)
@@ -57,7 +56,7 @@ const App = () => {
 
   // polls the bonded token total supply, batchId, price
   useInterval(async () => {
-    if (ready) {
+    if (isReady) {
       // totalSupply
       const bondedTokenContract = api.external(common.bondedToken.address, miniMeTokenAbi)
       const totalSupply = await bondedTokenContract.totalSupply().toPromise()
@@ -114,8 +113,8 @@ const App = () => {
   return (
     <div css="min-width: 320px">
       <Main assetsUrl="./">
-        <SyncIndicator visible={!ready} />
-        {ready && (
+        <SyncIndicator visible={!isReady} />
+        {isReady && common.collateralsAreOk && (
           <Fragment>
             <Layout>
               <AppHeader
@@ -157,6 +156,7 @@ const App = () => {
             </SidePanel>
           </Fragment>
         )}
+        {isReady && !common.collateralsAreOk && <h1>Something wrong with the collaterals</h1>}
       </Main>
     </div>
   )

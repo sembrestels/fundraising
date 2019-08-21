@@ -1,5 +1,5 @@
 {
-    "isSyncing": false,
+    "isReady": true,
     "common": {
         "connectedAccount": "0xb4124cEB3451635DAcedd11767f004d8a28c6eE7",
         "beneficiary": "0x5196d818401D9676b63BC6e6b3AB22514f2B7f15",
@@ -28,7 +28,8 @@
                 "symbol": "ANT",
                 "ratio": 0.01
             }
-        ]
+        ],
+        "collateralsAreOk": true
     },
     "overview": {
         "startPrice": 0.9999999999999996,
