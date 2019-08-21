@@ -1,5 +1,5 @@
+import { Badge, Box, Button, DiscButton, SidePanel, Text, TextInput } from '@aragon/ui'
 import React, { useState } from 'react'
-import { Badge, Box, Button, DiscButton, Text, TextInput, SidePanel } from '@aragon/ui'
 import styled from 'styled-components'
 import EditIcon from '../assets/EditIcon.svg'
 import HoverNotification from '../components/HoverNotification/HoverNotification'
@@ -111,7 +111,7 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
   } = reserve
   const [monthlyAllocation, setMonthlyAllocation] = useState(allocation)
   const [opened, setOpened] = useState(false)
-
+  console.log(bondedToken.symbol)
   const handleMonthlyChange = event => {
     setMonthlyAllocation(parseInt(event.target.value, 10))
   }
@@ -134,7 +134,7 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
               </Text>
             </div>
             <Button css={buttonStyle} onClick={() => setOpened(true)}>
-              <img style={{ marginTop: '6px' }} src={EditIcon} />
+              <img src={EditIcon} />
               <p
                 css={`
                   margin-top: 4px;
@@ -166,14 +166,14 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
         <div className="item">
           <p>Token</p>
           <Badge css="height: 100%;" foreground="#4D22DF" background="rgba(204, 189, 244, 0.16)">
-            {bondedToken.name} ({bondedToken.symbol})
+            {bondedToken.name}
           </Badge>
         </div>
       </Box>
       <SidePanel opened={opened} onClose={() => setOpened(false)} title="Monthly allocation">
         <div css="margin: 0 -30px 24px; border: 1px solid #DFE3E8;" />
         <form onSubmit={handleSubmit}>
-          <Text as="p">You can increase the tap by {maximumTapIncreasePct * 100}%.</Text>
+          <Text as="p">You can increase the tap by maximum {maximumTapIncreasePct * 100}%.</Text>
           <Text as="p">Current monthly allocation: 10000 DAI</Text>
           <Wrapper>
             <TextInput
@@ -189,8 +189,8 @@ export default ({ bondedToken, reserve, polledData: { polledTotalSupply }, updat
             />
           </Wrapper>
           <Wrapper>
-            <Button mode="strong" type="submit" wide>
-              Edit monthly allocation
+            <Button mode="strong" type="submit">
+              Save
             </Button>
           </Wrapper>
         </form>

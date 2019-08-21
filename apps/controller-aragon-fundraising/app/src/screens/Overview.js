@@ -1,6 +1,6 @@
+import { Box } from '@aragon/ui'
 import React from 'react'
 import styled from 'styled-components'
-import { Box } from '@aragon/ui'
 import Chart from '../components/Chart'
 import { round } from '../lib/math-utils'
 
@@ -20,14 +20,14 @@ export default ({ overview, bondedToken, currentBatch, polledData: { polledTotal
   } else price = startPrice
   return (
     <div>
-      <KeyMetrics heading="Key metrics" padding={false}>
+      <KeyMetrics heading={<div css="margin-left: 1rem; color: #637381; font-size: 12px; font-weight: 600;">KEY METRICS</div>} padding={false}>
         <ul>
           <li>
             <div>
               <p className="title">Price</p>
               <p className="number">$882</p>
             </div>
-            <p className="sub-number green"> $+82 (+9,2%M)</p>
+            <p className="sub-number green">+$82 (+9,2%M)</p>
           </li>
           <li>
             <div>
