@@ -134,8 +134,8 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         address                _beneficiary,
         IBancorFormula         _formula,
         uint256                _batchBlocks,
-        uint256                _buyFeePct,
-        uint256                _sellFeePct
+        uint256                _buyFee,
+        uint256                _sellFee
     )
         external onlyInit
     {
@@ -147,7 +147,7 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         require(isContract(_formula), ERROR_CONTRACT_IS_EOA);
         require(_beneficiaryIsValid(_beneficiary), ERROR_INVALID_BENEFICIARY);
         require(_batchBlocks > 0, ERROR_BATCH_BLOCKS_ZERO);
-        require(_pctIsValid(_buyFeePct) && _pctIsValid(_sellFeePct), ERROR_FEE_PERCENTAGE_TOO_HIGH);
+        require(_pctIsValid(_buyFee) && _pctIsValid(_sellFee), ERROR_FEE_PERCENTAGE_TOO_HIGH);
 
         controller = _controller;
         tokenManager = _tokenManager;
@@ -156,8 +156,8 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         beneficiary = _beneficiary;
         formula = _formula;
         batchBlocks = _batchBlocks;
-        buyFeePct = _buyFeePct;
-        sellFeePct = _sellFeePct;
+        buyFeePct = _buyFee;
+        sellFeePct = _sellFee;
     }
 
     /***** external functions *****/
@@ -297,7 +297,7 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     }
 
     /**
-     * @notice Return the investments of `_buyer`'s `_collateral.symbol(): string` sell orders from cancelled batch #`_batchId`
+     * @notice Return the investments of `_buyer`'s `_collateral.symbol(): string` buy orders from cancelled batch #`_batchId`
      * @param _buyer The address of the user whose cancelled buy orders are to be returned
      * @param _batchId The id of the batch used
      * @param _collateral The address of the collateral token used
@@ -351,6 +351,10 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         return _staticPricePPM(_supply, _balance, _reserveRatio);
     }
 
+    function getStaticPrice(uint256 _supply, uint256 _balance, uint32 _reserveRatio) public view returns (uint256) {
+        return _staticPrice(_supply, _balance, _reserveRatio);
+    }
+
     function getCollateralToken(address _collateral) public view isInitialized returns (bool, uint256, uint256, uint32, uint256) {
         Collateral storage collateral = collaterals[_collateral];
 
@@ -361,6 +365,10 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
 
     function _staticPricePPM(uint256 _supply, uint256 _balance, uint32 _reserveRatio) internal view returns (uint256) {
         return uint256(PPM).mul(uint256(PPM)).mul(_balance).div(_supply.mul(uint256(_reserveRatio)));
+    }
+
+    function _staticPrice(uint256 _supply, uint256 _balance, uint32 _reserveRatio) internal view returns (uint256) {
+        return uint256(PPM).mul(_balance).div(_supply.mul(uint256(_reserveRatio)));
     }
 
     function _currentBatchId() internal view returns (uint256) {
@@ -733,35 +741,33 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     }
 
     function _updatePricing(Batch storage batch, uint256 _batchId, address _collateral) internal {
-        // the situation where there are no buy nor sell orders can't happen [keep commented]
-        // if (batch.totalSellSpend == 0 && batch.totalBuySpend == 0)
-        //     return;
+        // if there are no orders do nothing
+        if (batch.totalSellSpend == 0 && batch.totalBuySpend == 0)
+            return;
 
         // static price is the current exact price in collateral
         // per token according to the initial state of the batch
-        // [expressed in PPM for precision sake]
         uint256 staticPricePPM = _staticPricePPM(batch.supply, batch.balance, batch.reserveRatio);
 
-        // [NOTE]
         // if staticPrice is zero then resultOfSell [= 0] <= batch.totalBuySpend
         // so totalSellReturn will be zero and totalBuyReturn will be
         // computed normally along the formula
 
-        // 1. we want to find out if buy orders are worth more sell orders [or vice-versa]
-        // 2. we thus check the return of sell orders at the current exact price
-        // 3. if the return of sell orders is larger than the pending buys,
-        //    there are more sells than buys [and vice-versa]
+        // 1. we want to find out if there are more buy orders or more sell orders
+        // 2. to do this we check the result of all sell and buy orders at the current
+        // exact price: if the result of sells is larger than the pending buys,
+        // there are more sells than buys [and vice-versa]
         uint256 resultOfSell = batch.totalSellSpend.mul(staticPricePPM).div(uint256(PPM));
 
         if (resultOfSell > batch.totalBuySpend) {
-            // >> sell orders are worth more than buy orders
+            // >> there are more sells than buys
 
             // 1. first we execute all pending buy orders at the current exact
             // price because there is at least one sell order for each buy order
             // 2. then the final sell return is the addition of this first
-            // matched return with the remaining bonding curve return
+            // matched return and the remaining bonding curve return
 
-            // the number of tokens bought as a result of all buy orders matched at the
+            // the number of tokens bought as a result of all buy orders combined at the
             // current exact price [which is less than the total amount of tokens to be sold]
             batch.totalBuyReturn = batch.totalBuySpend.mul(uint256(PPM)).div(staticPricePPM);
             // the number of tokens left over to be sold along the curve which is the difference
@@ -775,14 +781,14 @@ contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
             // plus the remaining sells which were executed along the bonding curve
             batch.totalSellReturn = batch.totalBuySpend.add(remainingSellReturn);
         } else {
-            // >> buy orders are worth more than sell orders
+            // >> there are more buys than sells
 
             // 1. first we execute all pending sell orders at the current exact
             // price because there is at least one buy order for each sell order
             // 2. then the final buy return is the addition of this first
-            // matched return with the remaining bonding curve return
+            // matched return and the remaining bonding curve return
 
-            // the number of collaterals bought as a result of all sell orders matched at the
+            // the number of collaterals bought as a result of all sell orders combined at the
             // current exact price [which is less than the total amount of collateral to be spent]
             batch.totalSellReturn = resultOfSell;
             // the number of collaterals left over to be spent along the curve which is the difference
